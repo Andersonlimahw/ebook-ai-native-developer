@@ -1,0 +1,2791 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Um guia prático para developers no mundo nativo de IA">
+  <title>Desvendando as Camadas de IA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <style>
+  /* ── Variables ── */
+  :root {
+    --bg:            #F5F7FA;
+    --bg2:           #EDF1F5;
+    --surface:       #FFFFFF;
+    --surface-muted: #F1F5F9;
+    --text:          #0F172A;
+    --text-body:     #2E3F58;
+    --text-muted:    #64748B;
+    --border:        #D5DBE4;
+    --border2:       #C7CED9;
+    --accent:        #87BB2D;
+    --accent-light:  #9ED138;
+    --accent-dark:   #6A9424;
+    --accent-darker: #4F6E1C;
+    --accent-teal:   #25B2B8;
+    --sidebar-w:     264px;
+    --topbar-h:      56px;
+    --radius:        12px;
+    --radius-sm:     8px;
+    --shadow-sm:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow:        0 4px 16px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.05);
+    --shadow-lg:     0 20px 60px rgba(0,0,0,.12), 0 8px 24px rgba(0,0,0,.08);
+    --transition:    0.2s cubic-bezier(0.4,0,0.2,1);
+  }
+  [data-theme="dark"] {
+    --bg:            #08090C;
+    --bg2:           #0F1118;
+    --surface:       #15171F;
+    --surface-muted: #1E222A;
+    --text:          #F8FAFC;
+    --text-body:     #CBD5E1;
+    --text-muted:    #64748B;
+    --border:        #1A1D24;
+    --border2:       #2E3440;
+    --accent:        #9ED138;
+    --accent-light:  #AEDF44;
+    --accent-dark:   #87BB2D;
+    --accent-darker: #6A9424;
+    --accent-teal:   #2DD4BF;
+    --shadow-sm:     0 1px 3px rgba(0,0,0,.3);
+    --shadow:        0 4px 16px rgba(0,0,0,.4);
+    --shadow-lg:     0 20px 60px rgba(0,0,0,.6), 0 8px 24px rgba(0,0,0,.4);
+  }
+
+  /* ── Reset ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body {
+    font-family: "Red Hat Display", -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text-body);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    transition: background var(--transition), color var(--transition);
+    overflow-x: hidden;
+  }
+
+  /* ── Layout ── */
+  .layout { display: flex; min-height: 100vh; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 40;
+    transition: transform var(--transition), background var(--transition), border-color var(--transition);
+    overflow: hidden;
+    /* Closed on mobile: no pointer-events so topbar buttons work */
+    pointer-events: none;
+  }
+  .sidebar.open { pointer-events: auto; }
+  @media (min-width: 1025px) {
+    .sidebar { pointer-events: auto; }
+  }
+
+  .sidebar-header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    margin-bottom: 4px;
+  }
+  .brand-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-darker));
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .brand-icon svg { color: white; }
+  .brand-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+  .brand-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+  .sidebar-search-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 8px 12px;
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition);
+    font-family: inherit;
+  }
+  .sidebar-search-btn:hover {
+    background: var(--bg2);
+    border-color: var(--accent);
+    color: var(--text);
+  }
+  .search-shortcut {
+    margin-left: auto;
+    font-size: 11px;
+    padding: 2px 6px;
+    background: var(--border);
+    border-radius: 4px;
+    color: var(--text-muted);
+  }
+  .sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .sidebar-nav::-webkit-scrollbar { width: 4px; }
+  .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+  .sidebar-nav::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 8px 8px 4px;
+  }
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-body);
+    text-decoration: none;
+    transition: all var(--transition);
+    cursor: pointer;
+    border: 1px solid transparent;
+    margin-bottom: 1px;
+    line-height: 1.3;
+  }
+  .nav-link:hover {
+    background: var(--surface-muted);
+    color: var(--text);
+    border-color: var(--border);
+  }
+  .nav-link.active {
+    background: linear-gradient(135deg, rgba(135,187,45,.12), rgba(79,110,28,.08));
+    color: var(--accent-dark);
+    border-color: rgba(135,187,45,.3);
+    font-weight: 600;
+  }
+  [data-theme="dark"] .nav-link.active {
+    color: var(--accent);
+    border-color: rgba(158,209,56,.3);
+    background: linear-gradient(135deg, rgba(158,209,56,.1), rgba(135,187,45,.06));
+  }
+  .nav-num {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    min-width: 18px;
+    font-variant-numeric: tabular-nums;
+  }
+  .sidebar-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px; height: 36px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all var(--transition);
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .icon-btn:hover, .icon-btn:focus-visible {
+    background: var(--surface-muted);
+    border-color: var(--border);
+    color: var(--text);
+  }
+  .icon-btn:active { opacity: 0.7; }
+
+  /* ── Sidebar backdrop ── */
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 39;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition), visibility var(--transition);
+  }
+  .sidebar-backdrop.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ── Topbar ── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    height: var(--topbar-h);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 20px;
+    z-index: 30;
+    backdrop-filter: saturate(1.8) blur(20px);
+    -webkit-backdrop-filter: saturate(1.8) blur(20px);
+    background: rgba(255,255,255,.88);
+    transition: background var(--transition), border-color var(--transition);
+  }
+  [data-theme="dark"] .topbar {
+    background: rgba(21,23,31,.88);
+  }
+  .topbar-menu-btn { display: none; }
+  .topbar-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .topbar-search-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition);
+    font-family: inherit;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    min-height: 44px;
+  }
+  .topbar-search-btn:hover, .topbar-search-btn:focus-visible {
+    background: var(--bg2);
+    border-color: var(--accent);
+    color: var(--text);
+  }
+  .topbar-search-btn:active { opacity: 0.7; }
+  .kbd {
+    font-size: 11px;
+    padding: 1px 5px;
+    background: var(--border);
+    border-radius: 4px;
+    color: var(--text-muted);
+  }
+
+  /* ── Main content ── */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .content {
+    flex: 1;
+    padding: 48px 64px 80px;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* ── Typography ── */
+  .ebook-section { margin-bottom: 80px; scroll-margin-top: calc(var(--topbar-h) + 24px); }
+  .ebook-section h1 {
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    margin-bottom: 16px;
+  }
+  .ebook-section h2 {
+    font-size: clamp(20px, 2.5vw, 26px);
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    margin: 48px 0 16px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .ebook-section h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    margin: 32px 0 12px;
+  }
+  .ebook-section h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin: 24px 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .ebook-section p {
+    font-size: 16px;
+    line-height: 1.8;
+    color: var(--text-body);
+    margin-bottom: 20px;
+    max-width: 68ch;
+  }
+  .ebook-section ul, .ebook-section ol {
+    padding-left: 24px;
+    margin-bottom: 20px;
+  }
+  .ebook-section li {
+    font-size: 16px;
+    line-height: 1.75;
+    color: var(--text-body);
+    margin-bottom: 6px;
+  }
+  .ebook-section a {
+    color: var(--accent-dark);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(135,187,45,.35);
+    transition: border-color var(--transition), color var(--transition);
+  }
+  [data-theme="dark"] .ebook-section a { color: var(--accent); border-color: rgba(158,209,56,.35); }
+  .ebook-section a:hover { color: var(--accent-darker); border-color: var(--accent-darker); }
+  [data-theme="dark"] .ebook-section a:hover { color: var(--accent-light); border-color: var(--accent-light); }
+  .ebook-section strong { color: var(--text); font-weight: 700; }
+  .ebook-section blockquote {
+    margin: 24px 0;
+    padding: 16px 20px;
+    border-left: 3px solid var(--accent);
+    background: linear-gradient(135deg, rgba(135,187,45,.07), rgba(79,110,28,.04));
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    color: var(--text-body);
+    font-style: italic;
+  }
+  .ebook-section code {
+    font-family: "SF Mono", "Fira Code", "JetBrains Mono", Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    padding: 2px 6px;
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--accent-dark);
+  }
+  [data-theme="dark"] .ebook-section code { color: var(--accent); }
+  .ebook-section pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    overflow-x: auto;
+    margin: 20px 0;
+    box-shadow: var(--shadow-sm);
+  }
+  .ebook-section pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 13.5px;
+    color: var(--text-body);
+  }
+  .ebook-section hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 40px 0;
+  }
+  .ebook-section .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 24px 0;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .ebook-section table {
+    width: 100%;
+    min-width: 480px;
+    border-collapse: collapse;
+    font-size: 14px;
+    border-radius: var(--radius-sm);
+  }
+  .ebook-section th {
+    background: var(--surface-muted);
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .ebook-section td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-body);
+  }
+  .ebook-section tr:last-child td { border-bottom: none; }
+  .ebook-section tr:hover td { background: var(--surface-muted); }
+  .ebook-section img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); margin: 16px 0; }
+
+  /* ── Spotlight ── */
+  .spotlight-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 100;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 80px 20px 20px;
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transition: opacity 0.15s ease, visibility 0.15s ease;
+  }
+  .spotlight-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+    visibility: visible;
+  }
+  .spotlight-modal {
+    width: 100%;
+    max-width: 560px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    transform: translateY(-12px) scale(0.98);
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .spotlight-overlay.open .spotlight-modal {
+    transform: translateY(0) scale(1);
+  }
+  .spotlight-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .spotlight-input-wrap svg { color: var(--text-muted); flex-shrink: 0; }
+  #spotlight-input {
+    flex: 1;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 16px;
+    color: var(--text);
+    outline: none;
+    caret-color: var(--accent);
+  }
+  #spotlight-input::placeholder { color: var(--text-muted); }
+  .spotlight-esc {
+    font-size: 11px;
+    padding: 2px 7px;
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  #spotlight-results {
+    list-style: none;
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .spotlight-result {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background var(--transition);
+    border: 1px solid transparent;
+  }
+  .spotlight-result:hover, .spotlight-result.selected {
+    background: linear-gradient(135deg, rgba(135,187,45,.09), rgba(79,110,28,.06));
+    border-color: rgba(135,187,45,.25);
+  }
+  [data-theme="dark"] .spotlight-result:hover,
+  [data-theme="dark"] .spotlight-result.selected {
+    background: linear-gradient(135deg, rgba(158,209,56,.09), rgba(135,187,45,.06));
+    border-color: rgba(158,209,56,.25);
+  }
+  .result-icon {
+    width: 32px; height: 32px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-muted);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent-dark);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  [data-theme="dark"] .result-icon { color: var(--accent); }
+  .result-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .result-preview {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .spotlight-footer {
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .spotlight-hint { display: flex; align-items: center; gap: 5px; }
+  .spotlight-hint kbd {
+    padding: 2px 6px;
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 10px;
+    font-family: inherit;
+    color: var(--text-muted);
+  }
+
+  /* ── Fullscreen ── */
+  body.fullscreen-mode .sidebar { transform: translateX(-100%); }
+  body.fullscreen-mode .main { margin-left: 0; }
+  body.fullscreen-mode .topbar { display: none; }
+  body.fullscreen-mode .content { max-width: 720px; padding: 40px 40px 80px; }
+  .exit-fullscreen-btn {
+    display: none;
+    position: fixed;
+    top: 20px; right: 20px;
+    z-index: 50;
+    padding: 8px 14px;
+    background: rgba(21,23,31,.92);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: all var(--transition);
+    font-family: inherit;
+    gap: 6px;
+    align-items: center;
+  }
+  body.fullscreen-mode .exit-fullscreen-btn { display: flex; }
+  .exit-fullscreen-btn:hover { color: var(--text); }
+
+  /* ── Progress bar ── */
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-darker));
+    z-index: 100;
+    width: 0%;
+    transition: width 0.1s linear;
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* ── Reduced motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  /* ── Responsive: Tablet ── */
+  @media (max-width: 1024px) {
+    .sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; }
+    .topbar-menu-btn { display: flex; }
+    .content { padding: 32px 32px 48px; }
+  }
+
+  /* ── Author ── */
+  .ebook-author {
+    margin-top: 48px;
+    padding: 24px 0 0;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .ebook-author-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 2px;
+  }
+  .ebook-author-link {
+    font-size: 13px;
+    color: var(--accent-dark);
+    text-decoration: none;
+  }
+  [data-theme="dark"] .ebook-author-link { color: var(--accent); }
+  .ebook-author-link:hover { text-decoration: underline; }
+  .ebook-author-coauthor {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── Responsive: Mobile ── */
+  @media (max-width: 768px) {
+    .content { padding: 20px 20px 40px; }
+    .topbar-search-btn .kbd { display: none; }
+    .topbar-search-btn { padding: 6px 14px; min-width: 100px; height: 44px; border-radius: 22px; }
+    .spotlight-overlay { padding: 56px 12px 16px; }
+    .ebook-section h1 { font-size: 26px; }
+    .ebook-section h2 { font-size: 20px; }
+    .ebook-section p, .ebook-section li { font-size: 15px; }
+    .ebook-section pre { padding: 14px; }
+    body.fullscreen-mode .content { padding: 20px 20px 40px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Progress bar -->
+<div class="progress-bar" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+
+<!-- Spotlight -->
+<div class="spotlight-overlay" id="spotlight-overlay" role="dialog" aria-modal="true" aria-label="Busca rápida">
+  <div class="spotlight-modal">
+    <div class="spotlight-input-wrap">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="spotlight-input" type="text" placeholder="Buscar capítulos..." autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls="spotlight-results">
+      <button class="spotlight-esc" id="spotlight-close" aria-label="Fechar">Esc</button>
+    </div>
+    <ul id="spotlight-results" role="listbox" aria-label="Resultados"></ul>
+    <div class="spotlight-footer">
+      <span class="spotlight-hint"><kbd>↑↓</kbd> navegar</span>
+      <span class="spotlight-hint"><kbd>↵</kbd> ir</span>
+      <span class="spotlight-hint"><kbd>Esc</kbd> fechar</span>
+    </div>
+  </div>
+</div>
+
+<!-- Exit fullscreen -->
+<button class="exit-fullscreen-btn" id="exit-fullscreen" aria-label="Sair do modo de leitura">
+  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>
+  Sair da leitura
+</button>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Navegação">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <div class="brand-icon" aria-hidden="true"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+        <div>
+          <div class="brand-name">Desvendando as Camadas de IA</div>
+          <div class="brand-sub">Um guia prático para developers no mundo nativo de IA</div>
+        </div>
+      </div>
+      <button class="sidebar-search-btn" id="sidebar-search-btn" aria-label="Buscar (⌘K)">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span>Buscar...</span>
+        <span class="search-shortcut">⌘K</span>
+      </button>
+    </div>
+    <nav class="sidebar-nav" aria-label="Capítulos">
+      <div class="nav-section-label">Conteúdo</div>
+      <a href="#index" class="nav-link" data-section="index" onclick="if(window.innerWidth<1025){Sidebar.close()}">
+      <span class="nav-num">·</span>
+      <span>Índice</span>
+    </a>
+<a href="#capitulo-01-o-llm" class="nav-link" data-section="capitulo-01-o-llm" onclick="if(window.innerWidth<1025){Sidebar.close()}">
+      <span class="nav-num">01</span>
+      <span>Capítulo 1: O LLM</span>
+    </a>
+<a href="#capitulo-02-o-harness" class="nav-link" data-section="capitulo-02-o-harness" onclick="if(window.innerWidth<1025){Sidebar.close()}">
+      <span class="nav-num">02</span>
+      <span>Capítulo 2: O Harness</span>
+    </a>
+<a href="#capitulo-03-o-agent" class="nav-link" data-section="capitulo-03-o-agent" onclick="if(window.innerWidth<1025){Sidebar.close()}">
+      <span class="nav-num">03</span>
+      <span>Capítulo 3: O Agent</span>
+    </a>
+<a href="#capitulo-04-o-subagent" class="nav-link" data-section="capitulo-04-o-subagent" onclick="if(window.innerWidth<1025){Sidebar.close()}">
+      <span class="nav-num">04</span>
+      <span>Capítulo 4: O Subagent</span>
+    </a>
+<a href="#capitulo-05-o-context" class="nav-link" data-section="capitulo-05-o-context" onclick="if(window.innerWidth<1025){Sidebar.close()}">
+      <span class="nav-num">05</span>
+      <span>Capítulo 5: O Context</span>
+    </a>
+<a href="#capitulo-06-o-skill" class="nav-link" data-section="capitulo-06-o-skill" onclick="if(window.innerWidth<1025){Sidebar.close()}">
+      <span class="nav-num">06</span>
+      <span>Capítulo 6: O Skill</span>
+    </a>
+<a href="#capitulo-07-plugin" class="nav-link" data-section="capitulo-07-plugin" onclick="if(window.innerWidth<1025){Sidebar.close()}">
+      <span class="nav-num">07</span>
+      <span>Capítulo 7: Plugin</span>
+    </a>
+<a href="#capitulo-08-mcp" class="nav-link" data-section="capitulo-08-mcp" onclick="if(window.innerWidth<1025){Sidebar.close()}">
+      <span class="nav-num">08</span>
+      <span>Capítulo 8: MCP</span>
+    </a>
+<a href="#capitulo-09-cli" class="nav-link" data-section="capitulo-09-cli" onclick="if(window.innerWidth<1025){Sidebar.close()}">
+      <span class="nav-num">09</span>
+      <span>Capítulo 9: CLI</span>
+    </a>
+<a href="#capitulo-10-sintese" class="nav-link" data-section="capitulo-10-sintese" onclick="if(window.innerWidth<1025){Sidebar.close()}">
+      <span class="nav-num">10</span>
+      <span>Capítulo 10: Síntese</span>
+    </a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="icon-btn" id="theme-btn" aria-label="Alternar tema">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="icon-btn" id="fullscreen-btn" aria-label="Modo de leitura">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+      </button>
+      <button class="icon-btn" id="sidebar-search-btn2" aria-label="Buscar (⌘K)">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Backdrop -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop" aria-hidden="true"></div>
+
+  <!-- Main -->
+  <main class="main" id="main">
+    <header class="topbar" role="banner">
+      <button class="icon-btn topbar-menu-btn" id="menu-btn" aria-label="Menu" aria-expanded="false" aria-controls="sidebar">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <span class="topbar-title" id="topbar-title">Desvendando as Camadas de IA</span>
+      <div class="topbar-actions">
+        <button class="topbar-search-btn" id="topbar-search-btn" aria-label="Buscar (⌘K)">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <span>Buscar</span>
+          <span class="kbd">⌘K</span>
+        </button>
+        <button class="icon-btn" id="theme-btn2" aria-label="Alternar tema">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <button class="icon-btn" id="fullscreen-btn2" aria-label="Modo de leitura">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="content" id="content">
+      <section id="index" class="ebook-section"><h1>Desvendando as Camadas de AI</h1>
+<blockquote>
+<p>Um e-book para desenvolvedores que querem se tornar AI-native — não só usar o chat, mas entender e construir os sistemas agênticos por baixo dele.</p>
+</blockquote>
+<p>Você já programa. Sabe ler um stack trace, desenhar um schema, discutir um trade-off de arquitetura. Mas o vocabulário novo chega rápido demais: <em>LLM</em>, <em>harness</em>, <em>agent</em>, <em>subagent</em>, <em>context</em>, <em>skill</em>, <em>plugin</em>, <em>MCP</em>, <em>CLI</em>. Todo mundo usa esses termos como se fossem óbvios, e raramente alguém mostra <strong>onde cada um encaixa</strong> e <strong>como se conectam</strong>.</p>
+<p>Este e-book resolve isso de um jeito específico: em vez de definir cada palavra isolada, ele constrói <strong>uma camada de cada vez</strong> em cima de um exemplo único e concreto, e a cada capítulo amarra de volta à camada central — o <code>agent</code>.</p>
+<h2>Para quem é</h2>
+<ul>
+<li>Desenvolvedores que já programam e querem dominar a arquitetura de sistemas agênticos.</li>
+<li>Quem usa Claude Code (ou ferramentas similares) no dia a dia mas trata tudo como caixa-preta.</li>
+<li>Times que querem padronizar como constroem, empacotam e compartilham agentes.</li>
+</ul>
+<p>Não é um tutorial de &quot;como usar o chat&quot;. É sobre <strong>como o stack funciona por dentro</strong> e como você projeta em cima dele.</p>
+<h2>O fio condutor</h2>
+<p>Todo capítulo usa a mesma tarefa concreta:</p>
+<blockquote>
+<p><strong>Construir um sistema universal de CRUD de Pedidos (Orders).</strong></p>
+</blockquote>
+<p>Uma tarefa real de engenharia de software, que qualquer desenvolvedor reconhece e que possui a complexidade ideal para demonstrar quase todas as camadas agênticas. Vamos ver:</p>
+<ul>
+<li>por que o <strong>LLM</strong> sozinho sabe descrever uma API de pedidos, mas não consegue escrever os arquivos ou rodar o banco;</li>
+<li>como o <strong>harness</strong> dá olhos e mãos ao modelo para criar e alterar arquivos;</li>
+<li>como um <strong>agent</strong> (<code>agent-order-orchestrator</code>) transforma o modelo genérico em um especialista de domínio;</li>
+<li>como uma squad de <strong>subagents</strong> divide a tarefa em frentes de produto, arquitetura, backend, frontend, QA e infra;</li>
+<li>e como <strong>context, skill, plugin, MCP e CLI</strong> entram para tornar essa operação robusta, reaproveitável, segura e eficiente.</li>
+</ul>
+<h2>O modelo mental</h2>
+<p>As camadas não são uma pilha rígida de cima para baixo — elas se compõem. Mas há uma ordem de dependência que ajuda a pensar:</p>
+<pre><code class="language-mermaid">graph TD
+    LLM[&quot;LLM — o cérebro: prevê o próximo token&quot;]
+    HARNESS[&quot;Harness — o corpo: loop, ferramentas, permissões&quot;]
+    AGENT[&quot;Agent — o especialista: prompt + modelo + ferramentas&quot;]
+    SUB[&quot;Subagent — a squad: delegação em contexto próprio&quot;]
+    CTX[&quot;Context — o que o agente enxerga&quot;]
+    SKILL[&quot;Skill — conhecimento sob demanda&quot;]
+    MCP[&quot;MCP — conexão com o mundo externo&quot;]
+    PLUGIN[&quot;Plugin — empacotamento distribuível&quot;]
+    CLI[&quot;CLI — onde você opera tudo&quot;]
+
+    LLM --&gt; HARNESS
+    HARNESS --&gt; AGENT
+    AGENT --&gt; SUB
+    CTX -.alimenta.-&gt; AGENT
+    SKILL -.estende.-&gt; AGENT
+    MCP -.conecta.-&gt; AGENT
+    PLUGIN -.empacota.-&gt; AGENT
+    CLI -.opera.-&gt; HARNESS
+</code></pre>
+<p>Leia assim: o <strong>LLM</strong> é o cérebro. O <strong>harness</strong> é o corpo que dá a ele olhos, mãos e um loop de ação. O <strong>agent</strong> é uma configuração desse conjunto para um trabalho específico. Tudo o mais — subagent, context, skill, plugin, MCP, CLI — existe para tornar o agent mais capaz, mais confiável ou mais fácil de operar.</p>
+<h2>Capítulos</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Capítulo</th>
+<th>O que você sai sabendo</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>01</td>
+<td><a href="01-llm.md">O LLM</a></td>
+<td>O que o modelo faz e, principalmente, o que ele <strong>não</strong> faz sozinho.</td>
+</tr>
+<tr>
+<td>02</td>
+<td><a href="02-harness.md">O Harness</a></td>
+<td>Como o LLM ganha loop, tools (TypeScript) e hooks de segurança determinísticos.</td>
+</tr>
+<tr>
+<td>03</td>
+<td><a href="03-agent.md">O Agent</a></td>
+<td><strong>O capítulo-âncora.</strong> Como estruturar e versionar o especialista de Orders.</td>
+</tr>
+<tr>
+<td>04</td>
+<td><a href="04-subagent.md">O Subagent</a></td>
+<td>Delegação em squads de contexto isolado. Estudo de caso: squad <code>order</code> completa.</td>
+</tr>
+<tr>
+<td>05</td>
+<td><a href="05-context.md">O Context</a></td>
+<td>Gestão de contexto, sinal sobre ruído e controle de memória de trabalho.</td>
+</tr>
+<tr>
+<td>06</td>
+<td><a href="06-skill.md">A Skill</a></td>
+<td>Progressive disclosure, skills auto-melhoráveis e a regra anti-explosão de tokens.</td>
+</tr>
+<tr>
+<td>07</td>
+<td><a href="07-plugin.md">O Plugin</a></td>
+<td>Empacotamento distribuível com slash commands, hooks e MCP integrados.</td>
+</tr>
+<tr>
+<td>08</td>
+<td><a href="08-mcp.md">O MCP</a></td>
+<td>MCP vs CLI: o protocolo unificado de dados e ações externas.</td>
+</tr>
+<tr>
+<td>09</td>
+<td><a href="09-cli.md">O CLI</a></td>
+<td>Terminal como cabine de comando, comandos customizados e Git Worktrees.</td>
+</tr>
+<tr>
+<td>10</td>
+<td><a href="10-sintese.md">Síntese</a></td>
+<td>O stack agêntico completo em ação de ponta a ponta, com melhores práticas.</td>
+</tr>
+</tbody></table>
+<h2>Como ler</h2>
+<p>Linear, do 01 ao 10, é a forma recomendada na primeira vez — cada capítulo assume o anterior. Mas o capítulo 03 (<code>agent</code>) é o centro de gravidade: se você só tem 20 minutos, leia o 01, o 02 e o 03 nessa ordem e já terá o modelo mental que sustenta o resto.</p>
+<p>Cada capítulo segue a mesma disciplina pedagógica:</p>
+<ol>
+<li><strong>Exemplo primeiro.</strong> Você vê o conceito em uso antes de qualquer definição.</li>
+<li><strong>Definição depois.</strong> Só então formalizamos o termo.</li>
+<li><strong>Amarração com o <code>agent</code>.</strong> Toda camada fecha mostrando como se conecta ao capítulo-âncora.</li>
+<li><strong>Trade-offs reais.</strong> O que custa, onde falha, quando não usar.</li>
+<li><strong>Fontes primárias.</strong> Docs oficiais e papers, não blogs de terceiros.</li>
+</ol>
+<h2>Convenções</h2>
+<ul>
+<li><strong>Idioma</strong>: português brasileiro. Estes <code>.md</code> são a única fonte da verdade. Versões em outros idiomas são geradas depois, a partir do HTML — o conteúdo-fonte nunca é replicado por idioma.</li>
+<li><strong>Modelos citados</strong>: a família Claude 4.X é usada como referência concreta — Opus 4.8 (<code>claude-opus-4-8</code>), Sonnet 4.6 (<code>claude-sonnet-4-6</code>), Haiku 4.5 (<code>claude-haiku-4-5</code>). Os conceitos valem para qualquer LLM moderno.</li>
+<li><strong>Voz</strong>: a inspiração em educadores como Andrej Karpathy (código primeiro) e em autores de engenharia como Robert C. Martin e Martin Fowler (clareza de princípios) é <strong>tom</strong>, não citação. Nenhuma frase é colocada na boca de pessoas reais.</li>
+</ul>
+<p>Comece pelo <a href="01-llm.md">Capítulo 01 — O LLM</a>.</p>
+</section>
+
+<section id="capitulo-01-o-llm" class="ebook-section"><h1>Capítulo 01 — O LLM</h1>
+<blockquote>
+<p>Um LLM é um previsor do próximo token. Poderosíssimo no que sabe; cego para o que não está na frente dele.</p>
+</blockquote>
+<p><strong>TL;DR:</strong> O LLM prevê o próximo token e raciocina sobre o mundo, mas não tem memória, olhos nem mãos — todas as outras camadas deste e-book existem para dar isso a ele.</p>
+<p>Antes de falar de agentes, harness e MCP, precisamos do tijolo de baixo. Todas as camadas deste e-book existem para compensar o que o LLM <strong>não</strong> faz sozinho. Então vamos começar vendo exatamente onde ele brilha e onde ele para.</p>
+<h2>Primeiro, o LLM em ação (e sua limitação)</h2>
+<p>Cole isto num chat de LLM puro, sem nenhuma ferramenta:</p>
+<pre><code class="language-text">&gt; Como eu crio uma API de CRUD de Pedidos (Orders) no meu sistema?
+</code></pre>
+<p>A resposta vem confiante e útil em geral:</p>
+<pre><code class="language-text">Para criar um CRUD de Pedidos, você normalmente:
+1. Expõe um endpoint POST `/orders` para criar o pedido com status inicial `created`.
+2. Expõe um endpoint GET `/orders/:id` para recuperar os detalhes.
+3. Expõe um endpoint PUT `/orders/:id` para atualizar dados ou transicionar o estado (ex.: `created` -&gt; `paid`).
+4. Expõe um endpoint DELETE `/orders/:id` para efetuar o cancelamento ou exclusão lógica.
+</code></pre>
+<p>Correto, genérico, e <strong>inútil para o seu caso específico</strong>. Por quê? Porque o modelo:</p>
+<ul>
+<li>não sabe se o seu serviço está em <code>orderController.ts</code> ou <code>OrderService.java</code>;</li>
+<li>não sabe que o seu banco é o PostgreSQL e que você utiliza o Prisma ORM;</li>
+<li>não pode abrir o seu repositório, rodar um teste, nem lembrar do que disse ontem;</li>
+<li>vai inventar nomes de função plausíveis se você pedir o código — e errar os seus.</li>
+</ul>
+<p>O modelo é um excelente raciocinador sobre <em>conhecimento geral do mundo</em>. Mas ele não tem olhos para o seu projeto, mãos para agir, nem memória entre conversas. Guarde essa frase: <strong>o LLM é o cérebro; ele ainda não tem corpo.</strong></p>
+<h2>O que é um LLM</h2>
+<blockquote>
+<p>Um <strong>LLM</strong> (<em>Large Language Model</em>, modelo de linguagem de grande escala) é uma rede neural treinada para prever o próximo <em>token</em> de uma sequência, a partir de um enorme corpus de texto e código.</p>
+</blockquote>
+<p>&quot;Token&quot; é um pedaço de texto — pode ser uma palavra, parte de uma palavra ou um sinal de pontuação. O modelo recebe uma sequência de tokens (o seu prompt) e produz uma distribuição de probabilidade sobre qual token vem em seguida. Escolhe um, anexa, e repete. Texto inteiro sai um token de cada vez.</p>
+<p>Parece simples demais para explicar o que vemos. A intuição que falta é a escala: quando você treina um previsor de próximo token bom o suficiente, em dados suficientes, prever a continuação exige <em>modelar</em> gramática, fatos, estilos de código, raciocínio passo a passo — porque tudo isso aparece nos dados. A capacidade emerge da tarefa simples levada ao extremo.</p>
+<h3>Como funciona, em três níveis de zoom</h3>
+<p><strong>Zoom 1 — a tarefa.</strong> Dado &quot;o céu é&quot;, o modelo atribui alta probabilidade a &quot;azul&quot;. Dado &quot;def soma(a, b): return&quot;, ele atribui alta probabilidade a &quot;a + b&quot;. A mesma máquina, domínios diferentes.</p>
+<p><strong>Zoom 2 — a arquitetura.</strong> Praticamente todo LLM moderno é um <em>Transformer</em>, a arquitetura introduzida no paper &quot;Attention Is All You Need&quot; (Vaswani et al., 2017). A peça central é a <strong>atenção</strong>: para prever o próximo token, o modelo pondera quais tokens anteriores importam mais. É isso que permite manter coerência ao longo de um texto longo.</p>
+<p><strong>Zoom 3 — o que você controla.</strong> Dois botões importam no dia a dia:</p>
+<ul>
+<li><strong>Temperatura</strong>: o quão &quot;ousado&quot; é o sorteio do próximo token. Temperatura baixa → respostas mais determinísticas e repetíveis; alta → mais variadas e criativas. Para tarefas de engenharia, baixa costuma ser melhor.</li>
+<li><strong>Janela de contexto</strong>: quantos tokens o modelo consegue &quot;ver&quot; de uma vez (prompt + resposta). Tudo que não cabe na janela, o modelo não enxerga. Esse limite é tão central que merece um capítulo só: <a href="05-context.md">Capítulo 05 — O Context</a>.</li>
+</ul>
+<h2>O que o LLM <strong>não</strong> faz sozinho</h2>
+<p>Esta lista é o motivo de existirem todas as outras camadas:</p>
+<table>
+<thead>
+<tr>
+<th>Limitação</th>
+<th>Consequência prática</th>
+<th>Quem resolve</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Não tem memória entre chamadas</td>
+<td>Esquece tudo a cada nova conversa</td>
+<td>Context + memory (Cap. 05)</td>
+</tr>
+<tr>
+<td>Não acessa seus arquivos</td>
+<td>Não conhece o seu código</td>
+<td>Harness + tools (Cap. 02)</td>
+</tr>
+<tr>
+<td>Não executa ações</td>
+<td>Não roda testes, não edita arquivos</td>
+<td>Harness (Cap. 02)</td>
+</tr>
+<tr>
+<td>Não acessa sistemas externos</td>
+<td>Não consulta o Stripe nem o banco</td>
+<td>MCP (Cap. 08)</td>
+</tr>
+<tr>
+<td>Pode alucinar</td>
+<td>Inventa APIs e fatos plausíveis</td>
+<td>Ferramentas + verificação (Cap. 02, 05)</td>
+</tr>
+<tr>
+<td>Conhecimento congelado no treino</td>
+<td>Não sabe do release de ontem</td>
+<td>Tools de busca / contexto fresco</td>
+</tr>
+</tbody></table>
+<p>Nenhuma dessas é um &quot;bug&quot; do modelo. São consequências diretas do que ele é: um previsor de tokens, não um sistema com estado e acesso ao mundo. As camadas seguintes são, literalmente, o trabalho de dar estado e acesso a esse cérebro.</p>
+<h2>Model routing: nem todo cérebro para toda tarefa</h2>
+<p>LLMs vêm em tamanhos. Na família Claude 4.X usada como referência neste e-book:</p>
+<ul>
+<li><strong>Opus 4.8</strong> (<code>claude-opus-4-8</code>): o mais capaz. Raciocínio profundo, trade-offs ambíguos, arquitetura. Mais caro e mais lento.</li>
+<li><strong>Sonnet 4.6</strong> (<code>claude-sonnet-4-6</code>): equilíbrio. Ótimo para execução de padrões já definidos, volume de código.</li>
+<li><strong>Haiku 4.5</strong> (<code>claude-haiku-4-5</code>): o mais rápido e barato. Ideal para passes mecânicos — lint, normalização, classificação simples.</li>
+</ul>
+<p>Escolher o modelo certo para cada tarefa chama-se <strong>model routing</strong>. Não é detalhe de custo: é casar a <em>dificuldade</em> da tarefa com a <em>capacidade</em> do modelo. É também por isso que o frontmatter do agent (Capítulo 03) tem um campo <code>model</code> — você decide, por papel, qual cérebro roda.</p>
+<h2>Como isso se conecta ao <code>agent</code></h2>
+<p>O agent do Capítulo 03 <strong>não é</strong> o LLM — ele <em>configura</em> o LLM. Quando você escreve no frontmatter:</p>
+<pre><code class="language-yaml">model: opus
+</code></pre>
+<p>você está dizendo &quot;este especialista usa o cérebro mais potente, porque o trabalho dele (decisões de arquitetura) é ambíguo&quot;. Trocar para <code>model: haiku</code> mantém o mesmo prompt, o mesmo papel, as mesmas ferramentas — mas com um cérebro mais rápido e mais barato, adequado a tarefas mecânicas. O agent é a configuração; o LLM é a peça configurável mais importante dela.</p>
+<p>E todo o resto do e-book — harness, context, tools, MCP — existe para entregar a esse cérebro o que ele não tem: olhos, mãos e memória.</p>
+<h2>Trade-offs e armadilhas</h2>
+<ul>
+<li><strong>Confiança ≠ correção.</strong> O modelo soa igualmente seguro quando acerta e quando alucina. Para fatos e APIs específicas, verifique — não confie na fluência.</li>
+<li><strong>Maior nem sempre é melhor.</strong> Usar o modelo mais caro para tudo é desperdício e mais lento. Roteie por dificuldade.</li>
+<li><strong>Conhecimento tem data.</strong> O treino tem um corte temporal. Para &quot;o que mudou ontem&quot;, o modelo precisa de contexto fresco vindo de fora (tools), não da memória dele.</li>
+<li><strong>A janela é finita.</strong> Encher o contexto de coisa irrelevante degrada a resposta tanto quanto faltar informação. Mais sobre isso no Capítulo 05.</li>
+</ul>
+<h3>Como saber se você entendeu</h3>
+<p>Você dominou este capítulo se consegue:</p>
+<ul>
+<li>explicar por que o modelo fala sobre CRUD de Pedidos mas não consegue mexer no seu código;</li>
+<li>dizer o que o <em>model routing</em> decide e quando usar opus, sonnet ou haiku;</li>
+<li>citar três coisas que o LLM não faz sozinho e qual camada resolve cada uma.</li>
+</ul>
+<h2>Fontes</h2>
+<ul>
+<li>Andrej Karpathy — nanoGPT, implementação mínima de um GPT treinável (boa intuição para previsão de próximo token): <a href="https://github.com/karpathy/nanoGPT">https://github.com/karpathy/nanoGPT</a></li>
+<li>Vaswani et al., &quot;Attention Is All You Need&quot; (2017) — o paper do Transformer: <a href="https://arxiv.org/abs/1706.03762">https://arxiv.org/abs/1706.03762</a></li>
+<li>Anthropic — modelos Claude (capacidades, tamanhos, IDs): <a href="https://docs.anthropic.com/en/docs/about-claude/models">https://docs.anthropic.com/en/docs/about-claude/models</a></li>
+<li>Anthropic — pesquisa: <a href="https://www.anthropic.com/research">https://www.anthropic.com/research</a></li>
+</ul>
+<h2>Síntese</h2>
+<p>O LLM é um previsor de próximo token treinado em escala suficiente para raciocinar sobre o mundo. É o cérebro do stack. Mas é um cérebro num pote: sem memória, sem olhos, sem mãos. Tudo que vem a seguir neste e-book é o trabalho de dar corpo a ele.</p>
+<p>O primeiro passo é o corpo mais básico: o programa que roda o modelo num loop e o conecta a ferramentas. É o harness.</p>
+<p>Próximo: <a href="02-harness.md">Capítulo 02 — O Harness</a>.</p>
+</section>
+
+<section id="capitulo-02-o-harness" class="ebook-section"><h1>Capítulo 02 — O Harness</h1>
+<blockquote>
+<p>O harness é o programa que dá olhos, mãos e um loop ao LLM. Sem ele, o modelo só fala. Com ele, o modelo age.</p>
+</blockquote>
+<p><strong>TL;DR:</strong> O harness envolve o LLM com um loop, ferramentas e permissões — é o que transforma um previsor de tokens num agente que age.</p>
+<p>No capítulo anterior, o LLM puro respondeu sobre o CRUD de Pedidos de forma genérica e não pôde tocar no seu código. Agora vamos dar um corpo a ele e ver a diferença.</p>
+<h2>Primeiro, o harness em ação</h2>
+<p>Mesma pergunta de antes — mas agora dentro do Claude Code, no terminal, dentro do repositório:</p>
+<pre><code class="language-text">&gt; Como eu crio uma API de CRUD de Pedidos (Orders) no meu sistema?
+</code></pre>
+<p>Desta vez a sequência é outra. Em vez de responder de cara, o sistema <strong>age</strong>:</p>
+<pre><code class="language-text">• Procurando arquivos de pedido…
+  grep &quot;Order&quot; → src/orders/OrderService.ts
+• Lendo src/orders/OrderService.ts (110 linhas)
+• Lendo src/orders/types.ts
+• Rodando os testes existentes… 8 passaram
+
+Encontrei. Seu OrderService gerencia pedidos na memória. Para virar um CRUD persistente de verdade, precisamos conectá-lo a um banco de dados (ex. PostgreSQL) e expor os endpoints REST. Antes de eu propor o código, há uma decisão de arquitetura aqui — quer que eu acione o arquiteto de pedidos para desenhar as transições de estado e persistência?
+</code></pre>
+<p>A diferença não está no cérebro — é o mesmo LLM. A diferença é que agora ele:</p>
+<ol>
+<li><strong>enxergou</strong> o seu código (<code>grep</code>, depois <code>Read</code>);</li>
+<li><strong>agiu</strong> no seu ambiente (rodou os testes);</li>
+<li><strong>decidiu sozinho a sequência</strong> de passos (procurar → ler → testar → responder).</li>
+</ol>
+<p>Quem deu esses olhos e mãos ao modelo, e quem rodou esse ciclo de passos, foi o <strong>harness</strong>.</p>
+<h2>O que é um harness</h2>
+<blockquote>
+<p>Um <strong>harness</strong> é o programa que envolve o LLM e o torna útil: ele monta o contexto, oferece ferramentas, executa as ferramentas que o modelo pede, devolve os resultados ao modelo e repete esse ciclo até a tarefa terminar — tudo sob um modelo de permissões.</p>
+</blockquote>
+<p>O nome vem de &quot;arreio/cabresto&quot;: é o equipamento que controla e direciona um cavalo. Aqui, o cavalo é o LLM. O Claude Code é um harness. O Cursor é um harness. Um script TypeScript que chama a API da Anthropic num loop <code>while</code> com tool use também é, em miniatura, um harness.</p>
+<p>A frase de bolso: <strong>o LLM é o cérebro; o harness é o corpo e o sistema nervoso.</strong></p>
+<h2>O loop agêntico: o coração do harness</h2>
+<p>A peça mais importante de um harness é o loop. Em TypeScript/JavaScript moderno:</p>
+<pre><code class="language-typescript">interface Message {
+  role: &#39;system&#39; | &#39;user&#39; | &#39;assistant&#39; | &#39;tool&#39;;
+  content: string;
+  toolCallId?: string;
+}
+
+async function runAgentLoop(
+  systemPrompt: string,
+  userMessage: string,
+  availableTools: Record&lt;string, Function&gt;
+): Promise&lt;string&gt; {
+  const context: Message[] = [
+    { role: &#39;system&#39;, content: systemPrompt },
+    { role: &#39;user&#39;, content: userMessage }
+  ];
+
+  while (true) {
+    // 1. O LLM analisa o contexto e decide o próximo passo
+    const response = await llm.complete(context, Object.keys(availableTools));
+
+    if (response.wantsToUseTool) {
+      // 2. O harness intercepta e executa a ferramenta de forma síncrona/assíncrona
+      const toolResult = await availableTools[response.toolName](response.arguments);
+      
+      // 3. O harness atualiza o contexto com o pedido e o resultado
+      context.push({ role: &#39;assistant&#39;, content: response.text });
+      context.push({ role: &#39;tool&#39;, toolCallId: response.toolCallId, content: JSON.stringify(toolResult) });
+      
+      // 4. Loop continua (pensar -&gt; agir -&gt; observar)
+      continue;
+    } else {
+      // O LLM decidiu que concluiu a tarefa
+      return response.text;
+    }
+  }
+}
+</code></pre>
+<p>Releia o exemplo do CRUD de Pedidos com esse loop na cabeça:</p>
+<ol>
+<li>O modelo recebe o pedido e decide: &quot;preciso achar onde os pedidos são criados ou armazenados&quot; → pede <code>Grep</code>.</li>
+<li>O harness executa o <code>Grep</code>, devolve o caminho do arquivo <code>OrderService.ts</code>.</li>
+<li>O modelo decide: &quot;preciso ler esse arquivo&quot; → pede <code>Read</code>.</li>
+<li>O harness lê, devolve o conteúdo de <code>OrderService.ts</code>.</li>
+<li>O modelo decide: &quot;vou validar a suite rodando os testes&quot; → pede <code>Bash</code>.</li>
+<li>O harness roda os testes locais, devolve a saída.</li>
+<li>O modelo conclui que tem o necessário para a decisão arquitetural e responde — saindo do loop.</li>
+</ol>
+<p>Cada volta no <code>while</code> é uma decisão do modelo seguida de uma ação do harness. É essa alternância <strong>pensar → agir → observar</strong> que diferencia um agente de um chat.</p>
+<h2>As quatro responsabilidades do harness</h2>
+<pre><code class="language-mermaid">graph LR
+    subgraph Harness
+        T[&quot;Ferramentas&lt;br/&gt;(tools)&quot;]
+        P[&quot;Permissões&quot;]
+        C[&quot;Gestão de contexto&quot;]
+        L[&quot;Loop agêntico&quot;]
+    end
+    LLM[&quot;LLM&quot;] &lt;--&gt; L
+    L --&gt; T
+    L --&gt; C
+    T --&gt; P
+</code></pre>
+<p><strong>1. Ferramentas (tools).</strong> São as funções que o modelo pode chamar: <code>Read</code>, <code>Write</code>, <code>Edit</code>, <code>Bash</code>, <code>Grep</code>, <code>Glob</code>, busca na web, e outras. Cada ferramenta tem um nome, uma descrição e um schema de argumentos. O modelo não executa nada — ele <em>pede</em> ao harness para executar. (Mais ferramentas, para sistemas externos, chegam via MCP no <a href="08-mcp.md">Capítulo 08</a>.)</p>
+<p><strong>2. Permissões.</strong> Antes de executar uma ferramenta sensível — editar um arquivo, rodar um comando — o harness aplica uma política: pergunta ao usuário, ou consulta uma allowlist, ou bloqueia. É a fronteira de segurança entre &quot;o modelo quer fazer X&quot; e &quot;X acontece de verdade&quot;. Restringir as <code>tools</code> de um agent (Capítulo 03) é uma forma de definir essa fronteira por design.</p>
+<p><strong>3. Gestão de contexto.</strong> A janela de contexto é finita (Capítulo 01). O harness decide o que entra: quais arquivos, quanto do histórico, resultados de quais ferramentas. Quando a conversa fica longa demais, ele <strong>compacta</strong> — resume o que passou para liberar espaço. Boa gestão de contexto é o que separa um harness que se perde de um que mantém o fio. É o tema do <a href="05-context.md">Capítulo 05</a>.</p>
+<p><strong>4. Loop agêntico.</strong> O <code>while</code> que vimos. É o que transforma uma resposta única numa sequência autônoma de passos.</p>
+<h3>Hooks: estendendo o loop de forma determinística</h3>
+<p>Além das quatro responsabilidades fundamentais, harnesses modernos como o Claude Code trazem suporte a <strong>Hooks</strong>. 
+Um hook é um script ou comando de terminal que o harness executa de forma automática em resposta a eventos específicos do ciclo de vida agêntico — como antes de rodar uma ferramenta (<code>PreToolUse</code>), após a execução (<code>PostToolUse</code>), ou ao encerrar a sessão (<code>Stop</code>).</p>
+<p>Isso abre portas para controles e automações determinísticas fora da rede neural:</p>
+<ul>
+<li><strong>Hooks de som / feedback sonoro:</strong> Disparar um áudio no terminal informando se o build ou teste que o agente rodou quebrou. Exemplo de hook disparado após <code>PostToolUse</code> com comando <code>Bash</code>:<pre><code class="language-bash"># Se o comando executado pelo agente falhar, toca um som de erro no macOS
+if [ $EXIT_CODE -ne 0 ]; then
+  say &quot;Build falhou&quot; || afplay /System/Library/Sounds/Basso.aiff
+fi
+</code></pre>
+</li>
+<li><strong>Notificação via OS/Terminal:</strong> Mandar alertas visuais no desktop para o desenvolvedor saber que o agente concluiu uma sub-tarefa longa enquanto ele estava em outra aba.<pre><code class="language-bash"># Notifica o OS usando osascript (macOS)
+osascript -e &#39;display notification &quot;O agente completou o CRUD de Pedidos!&quot; with title &quot;Claude Code&quot;&#39;
+</code></pre>
+</li>
+</ul>
+<p>Hooks deixam você injetar política e automação sem mudar o modelo. Voltamos a eles no Capítulo 07.</p>
+<h2>Como isso se conecta ao <code>agent</code></h2>
+<p>Esta é a relação mais importante do e-book, então vale a pena ser explícito:</p>
+<blockquote>
+<p><strong>O agent é a configuração. O harness é o motor que roda essa configuração.</strong></p>
+</blockquote>
+<p>Quando você cria o <code>agent-order-architect</code> (Capítulo 03) com <code>tools: Read, Grep, Glob</code> e <code>model: opus</code>, você não está construindo um programa novo. Você está dando ao harness uma configuração: &quot;quando este papel for acionado, monte o contexto com <em>este</em> system prompt, ofereça <em>estas</em> ferramentas, e rode o loop com <em>este</em> modelo&quot;.</p>
+<p>O mesmo harness roda o <code>agent-order-architect</code>, o <code>agent-order-backend</code> e o assistente padrão. O que muda entre eles é só a configuração — o prompt, as ferramentas, o modelo. Por isso um agent é tão barato de criar: ele reaproveita todo o motor que já existe.</p>
+<pre><code class="language-mermaid">graph TD
+    H[&quot;Harness (motor único)&quot;]
+    A1[&quot;agent-order-architect&lt;br/&gt;opus · Read/Grep/Glob&quot;]
+    A2[&quot;agent-order-backend&lt;br/&gt;sonnet · Read/Write/Edit/Bash&quot;]
+    A3[&quot;assistente padrão&lt;br/&gt;todas as ferramentas&quot;]
+    H --&gt; A1
+    H --&gt; A2
+    H --&gt; A3
+</code></pre>
+<h2>Trade-offs e armadilhas</h2>
+<ul>
+<li><strong>O harness define a superfície de risco.</strong> Dar <code>Bash</code> sem política de permissão é dar ao modelo um shell. As permissões existem por isso — não as desligue por conveniência.</li>
+<li><strong>Loop sem limite gasta tokens e tempo.</strong> Um bom harness tem teto de iterações e sabe parar. Tarefa mal definida vira loop caro.</li>
+<li><strong>Contexto mal gerido degrada tudo.</strong> Encher a janela de arquivos irrelevantes piora a resposta. O harness escolher <em>o que</em> o modelo vê é metade do resultado.</li>
+<li><strong>Harness não conserta um cérebro ruim.</strong> Se o modelo é fraco para a tarefa, mais ferramentas não salvam. Casar modelo↔tarefa (Capítulo 01) continua valendo.</li>
+</ul>
+<h3>Como saber se você entendeu</h3>
+<p>Você dominou este capítulo se consegue:</p>
+<ul>
+<li>descrever o loop pensar → agir → observar com as suas próprias palavras;</li>
+<li>listar as quatro responsabilidades do harness;</li>
+<li>explicar a frase &quot;o agent é a configuração; o harness é o motor&quot;.</li>
+</ul>
+<h2>Fontes</h2>
+<ul>
+<li>Yao et al., &quot;ReAct: Synergizing Reasoning and Acting in Language Models&quot; (2022) — o padrão de raciocínio + ação que fundamenta o loop do harness: <a href="https://arxiv.org/abs/2210.03629">https://arxiv.org/abs/2210.03629</a></li>
+<li>Claude Code — visão geral (o harness de referência deste e-book): <a href="https://code.claude.com/docs/pt/overview">https://code.claude.com/docs/pt/overview</a></li>
+<li>Anthropic — &quot;Building effective agents&quot; (o loop de ferramentas, agentes vs. workflows): <a href="https://www.anthropic.com/research/building-effective-agents">https://www.anthropic.com/research/building-effective-agents</a></li>
+<li>Anthropic — uso de ferramentas (tool use) na API: <a href="https://docs.anthropic.com/en/docs/build-with-claude/tool-use">https://docs.anthropic.com/en/docs/build-with-claude/tool-use</a></li>
+</ul>
+<h2>Síntese</h2>
+<p>O harness é o que transforma um previsor de tokens num agente que faz coisas. Ele dá ferramentas, aplica permissões, gerencia o contexto e roda o loop pensar→agir→observar. O Claude Code é exatamente isso: um harness operado pelo terminal.</p>
+<p>Mas até aqui temos um harness genérico, que faz um pouco de tudo. O próximo passo é especializá-lo para um trabalho — dar a ele um papel, um modelo e limites. Isso é o agent.</p>
+<p>Próximo: <a href="03-agent.md">Capítulo 03 — O Agent</a>.</p>
+</section>
+
+<section id="capitulo-03-o-agent" class="ebook-section"><h1>Capítulo 03 — O Agent</h1>
+<blockquote>
+<p>Um agent é um LLM rodando dentro de um harness, configurado por um arquivo <code>.md</code> para fazer <strong>um trabalho específico, bem</strong>.</p>
+</blockquote>
+<p><strong>TL;DR:</strong> Um agent é um arquivo <code>.md</code> que especializa o LLM+harness para um trabalho — prompt, modelo e ferramentas. É software versionável, não prompt descartável.</p>
+<p>Este é o capítulo-âncora. Tudo que vem antes (LLM, harness) existe para chegar aqui; tudo que vem depois (subagent, context, skill, plugin, MCP, CLI) existe para deixar o agent mais capaz. Se você só ler um capítulo, leia este.</p>
+<h2>Primeiro, o agent em ação</h2>
+<p>Você está no terminal, no repositório, e digita:</p>
+<pre><code class="language-text">&gt; Preciso criar um sistema robusto de CRUD de Pedidos (Orders). Antes de escrever código,
+  quero a arquitetura: transições de estado, concorrência e o que decidir primeiro.
+</code></pre>
+<p>Em vez de o modelo genérico começar a cuspir código, <strong>um especialista</strong> assume a tarefa. Ele lê o código existente, identifica a modelagem de entidades atual e responde algo como:</p>
+<pre><code class="language-text">[agent-order-architect]
+
+Decisões antes de codar:
+1. Concorrência: Atualizações simultâneas de status do Pedido (ex.: transição para `paid`
+   e `cancelled` ocorrendo no mesmo milissegundo) podem causar race conditions.
+   → Decisão: Usar optimistic locking com uma coluna `version` na tabela de pedidos.
+2. Integridade de Estado: Transições ilegais como pular de `draft` direto para `paid` ou
+   pagar um pedido já cancelado quebram o fluxo de negócios.
+   → Decisão: Implementar uma máquina de estados estrita no OrderService.
+3. Auditoria: Alterações críticas no ciclo de vida do pedido devem ser rastreáveis.
+   → Decisão: Tabela de `order_events` registrando transição, payload e ator.
+
+Diagrama da máquina de estados proposto: [...]
+NÃO escrevi código — esse é trabalho do agent-order-backend.
+</code></pre>
+<p>Repare em três coisas:</p>
+<ol>
+<li>Ele tem <strong>um nome e um papel</strong> (<code>agent-order-architect</code>) — não é &quot;a IA&quot;, é o arquiteto.</li>
+<li>Ele tem <strong>um escopo</strong> — projeta, não implementa. Ele mesmo diz que não escreve código.</li>
+<li>Ele <strong>leu o seu código</strong> antes de responder — não inventou o fluxo, descobriu.</li>
+</ol>
+<p>Um agent, no Claude Code, é um arquivo Markdown com um cabeçalho YAML (o <em>frontmatter</em>) e um corpo. O frontmatter configura; o corpo é o system prompt — as instruções que o modelo recebe antes de qualquer conversa. Salve isto em <code>.claude/agents/agent-order-architect.md</code>:</p>
+<pre><code class="language-markdown">---
+name: agent-order-architect
+description: Projeta a arquitetura técnica do domínio de pedidos (Orders)
+  antes da implementação. Use quando há decisão de design, modelagem de
+  entidades, definição de máquina de estados ou trade-offs de concorrência.
+model: opus            # raciocínio profundo p/ trade-offs
+tools: Read, Grep, Glob   # read-only: o arquiteto propõe, não implementa
+skills: [improve-codebase-architecture, diagnose]
+---
+
+# Order Architect
+
+Você projeta a arquitetura do domínio `order` (pedidos). Seu produto é uma
+**decisão**, não código.
+
+## O que você entrega
+- Decisões de design numeradas, cada uma com a justificativa e o risco
+  que ela mitiga.
+- Um diagrama textual (Mermaid) do fluxo ou máquina de estados proposta.
+- A lista de riscos abertos e o que precisa ser validado antes de codar.
+
+## Como você trabalha
+1. Leia o código atual antes de opinar (Read/Grep/Glob). Nunca presuma
+   o fluxo — descubra-o.
+2. Prefira padrões consolidados: máquina de estados explícita, optimistic
+   locking para concorrência e auditoria por eventos.
+3. Exponha trade-offs reais. Se há duas opções, mostre as duas e
+   recomende uma com motivo.
+
+## Restrições
+- NÃO escreva código de produção. Isso é trabalho do agent-order-backend.
+- NÃO decida sozinho o que é regra de negócio — sinalize para o
+  agent-order-product-manager.
+</code></pre>
+<p>Cada linha desse arquivo faz um trabalho. Vamos por partes.</p>
+<h3>O frontmatter, campo a campo</h3>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Para que serve</th>
+<th>No nosso exemplo</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>name</code></td>
+<td>Identificador único do agent. É como você (ou o orquestrador) o chama.</td>
+<td><code>agent-order-architect</code></td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><strong>O campo mais importante.</strong> Descreve <em>quando</em> usar o agent. É o que o sistema lê para decidir delegar a tarefa a ele.</td>
+<td>&quot;Use quando há decisão de design...&quot;</td>
+</tr>
+<tr>
+<td><code>model</code></td>
+<td>Qual LLM roda este agent. Você casa a dificuldade da tarefa com a capacidade do modelo.</td>
+<td><code>opus</code> (raciocínio profundo)</td>
+</tr>
+<tr>
+<td><code>tools</code></td>
+<td>Quais ferramentas o agent pode usar. Omitir = herda todas. Restringir é uma decisão de segurança.</td>
+<td><code>Read, Grep, Glob</code> (só leitura)</td>
+</tr>
+<tr>
+<td><code>skills</code></td>
+<td>Quais conhecimentos empacotados o agent deve preferir. Detalhado no <a href="06-skill.md">Capítulo 06</a>.</td>
+<td><code>improve-codebase-architecture</code>, <code>diagnose</code></td>
+</tr>
+</tbody></table>
+<p>Duas observações honestas sobre o frontmatter:</p>
+<ul>
+<li>Os campos centrais e documentados do Claude Code são <code>name</code>, <code>description</code>, <code>tools</code> e <code>model</code>. O <code>description</code> e o <code>name</code> são obrigatórios; <code>tools</code> e <code>model</code> são opcionais e têm defaults sensatos (herdar todas as ferramentas, herdar o modelo da conversa).</li>
+<li>O campo <code>skills</code> aparece no nosso exemplo como uma forma declarativa de dizer &quot;este agent costuma usar estas skills&quot;. A associação agent↔skill é o assunto do Capítulo 06; aqui basta saber que o frontmatter é o lugar onde você <strong>expressa as intenções</strong> do agent.</li>
+</ul>
+<h3>O <code>description</code> é a parte que mais importa</h3>
+<p>Iniciantes acham que o corpo (o system prompt) é o que define o agent. Na prática, o <code>description</code> é o que decide se o agent é <strong>acionado</strong>. Quando você digita um pedido, o sistema compara sua intenção com os <code>description</code> de todos os agents disponíveis e delega ao que melhor casa.</p>
+<p>Um <code>description</code> ruim:</p>
+<pre><code class="language-yaml">description: Agente de pedidos.
+</code></pre>
+<p>Um <code>description</code> bom:</p>
+<pre><code class="language-yaml">description: Projeta a arquitetura técnica do domínio de pedidos (Orders)
+  antes da implementação. Use quando há decisão de design, modelagem de
+  entidades, definição de máquina de estados ou trade-offs de concorrência.
+</code></pre>
+<p>A diferença: o segundo diz <strong>quando</strong> acionar (gatilhos: &quot;decisão de design&quot;, &quot;trade-off&quot;), não só <strong>o que</strong> o agent é. Escreva <code>description</code> como se estivesse ensinando um colega a saber quando chamar você. Esse é, segundo a documentação do Claude Code, o fator que mais afeta se o agent é usado no momento certo.</p>
+<h2>O que é um agent, afinal</h2>
+<p>Agora a definição, depois do exemplo (como prometido):</p>
+<blockquote>
+<p>Um <strong>agent</strong> é uma instância de um LLM, rodando dentro de um harness, especializada por um system prompt e restringida por uma configuração (modelo, ferramentas, contexto) para executar um tipo de tarefa de forma autônoma.</p>
+</blockquote>
+<p>Decompondo:</p>
+<ul>
+<li><strong>Instância de um LLM</strong>: o cérebro é o modelo (Capítulo 01). O agent não substitui o modelo — ele o <em>configura</em>.</li>
+<li><strong>Dentro de um harness</strong>: o agent precisa do loop, das ferramentas e do gerenciamento de contexto que o harness fornece (Capítulo 02). Um agent sem harness é só um prompt.</li>
+<li><strong>Especializado por um system prompt</strong>: o corpo do <code>.md</code>. É o que transforma &quot;um modelo genérico&quot; in &quot;o arquiteto de pedidos&quot;.</li>
+<li><strong>Restringido por configuração</strong>: <code>model</code>, <code>tools</code>. Restrição não é limitação acidental — é design. Dar só <code>Read, Grep, Glob</code> ao arquiteto é o que garante que ele <em>não consiga</em> escrever código mesmo que tente.</li>
+<li><strong>De forma autônoma</strong>: você descreve o objetivo; o agent decide os passos.</li>
+</ul>
+<p>A frase de bolso: <strong>um agent é um LLM com um trabalho, ferramentas e limites.</strong></p>
+<h2>Como o agent funciona por dentro</h2>
+<p>Quando o agent é acionado, o harness roda um loop (o mesmo do Capítulo 02, agora com a configuração do agent):</p>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant U as Você
+    participant H as Harness
+    participant A as agent-order-architect
+    participant LLM as LLM (opus)
+
+    U-&gt;&gt;H: &quot;Criar sistema robusto de CRUD de Pedidos — quero a arquitetura&quot;
+    H-&gt;&gt;A: aciona (match no description)
+    A-&gt;&gt;LLM: system prompt + pedido
+    LLM--&gt;&gt;A: &quot;preciso ver o código atual&quot;
+    A-&gt;&gt;H: Read(src/orders/OrderService.ts)
+    H--&gt;&gt;A: conteúdo do arquivo
+    A-&gt;&gt;LLM: system prompt + pedido + código
+    LLM--&gt;&gt;A: decisões + diagrama + riscos
+    A--&gt;&gt;U: resposta final (sem código)
+</code></pre>
+<p>O ponto-chave: o agent <strong>não responde de cara</strong>. Ele entra num ciclo de <em>pensar → usar ferramenta → observar resultado → pensar de novo</em> até ter o suficiente para responder. As ferramentas que ele pode usar nesse ciclo são exatamente as do campo <code>tools</code>. Por isso restringir <code>tools</code> é restringir o que o agent <em>consegue fazer</em>, não só o que ele <em>deveria</em> fazer.</p>
+<h2>Como construir um agent, na prática</h2>
+<ol>
+<li><strong>Defina o trabalho em uma frase.</strong> &quot;Projeta arquitetura de pedidos, não implementa.&quot; Se você não consegue resumir em uma frase, o agent está grande demais — quebre em dois.</li>
+<li><strong>Escreva o <code>description</code> pensando no gatilho.</strong> Quando este agent deve ser chamado? Liste situações concretas.</li>
+<li><strong>Escolha o modelo pela dificuldade.</strong> Trade-offs ambíguos pedem <code>opus</code>; execução de padrão conhecido roda bem em <code>sonnet</code>; passes mecânicos, <code>haiku</code>. (Esse é o assunto de <em>model routing</em>, que revisitamos no Capítulo 09.)</li>
+<li><strong>Restrinja as ferramentas pelo princípio do menor privilégio.</strong> Um arquiteto read-only não deveria ter <code>Write</code> nem <code>Bash</code>. Toda ferramenta a mais é uma forma a mais de errar.</li>
+<li><strong>Escreva o system prompt como contrato.</strong> O que entrega, como trabalha, o que NÃO faz. As três seções do nosso exemplo (<code>## O que você entrega</code>, <code>## Como você trabalha</code>, <code>## Restrições</code>) são um molde reutilizável.</li>
+<li><strong>Teste o gatilho.</strong> Faça um pedido vago e veja se o agent certo é acionado. Se não, o problema quase sempre está no <code>description</code>.</li>
+</ol>
+<h2>Como o agent se conecta a todas as outras camadas</h2>
+<p>Aqui está a espinha dorsal do e-book. Guarde este mapa — cada item é um capítulo:</p>
+<ul>
+<li><strong>LLM (Cap. 01)</strong>: é o cérebro que o agent configura. Trocar <code>model: opus</code> por <code>model: haiku</code> muda o agent sem mudar uma linha do prompt.</li>
+<li><strong>Harness (Cap. 02)</strong>: é o que roda o loop do agent e executa suas ferramentas. O agent é a configuração; o harness é o motor.</li>
+<li><strong>Subagent (Cap. 04)</strong>: quando um trabalho é grande demais para um agent, ele <strong>delega</strong> a subagents. O <code>agent-order-architect</code> é, na squad completa, um subagent do <code>agent-order-orchestrator</code>.</li>
+<li><strong>Context (Cap. 05)</strong>: o que o agent &quot;enxerga&quot; — system prompt, pedido, resultados de ferramentas. Engenheirar esse contexto é o que faz o arquiteto ler o arquivo certo e não os 200 errados.</li>
+<li><strong>Skill (Cap. 06)</strong>: Conhecimento sob demanda. O <code>skills: [improve-codebase-architecture]</code> do frontmatter diz quais pacotes de know-how o agent carrega quando precisa.</li>
+<li><strong>Plugin (Cap. 07)</strong>: Empacota o agent (e seus colegas de squad, skills e hooks) para você instalar em outro repositório com um comando.</li>
+<li><strong>MCP (Cap. 08)</strong>: Dá ao agent ferramentas para o mundo externo — consultar o banco Postgres ou chamar APIs — via um protocolo padrão.</li>
+<li><strong>CLI (Cap. 09)</strong>: É onde você invoca o agent de verdade: o Claude Code no terminal.</li>
+</ul>
+<p>Toda vez que um capítulo seguinte introduzir uma camada, ele vai voltar a este agent e mostrar <strong>o que muda nele</strong>.</p>
+<h2>Trade-offs e armadilhas</h2>
+<ul>
+<li><strong>Não crie um agent para tudo.</strong> Se a tarefa é única e simples, o assistente padrão resolve. Agent é para um papel <em>recorrente</em> com um escopo <em>estável</em>.</li>
+<li><strong>Agents largos demais falham.</strong> Um <code>agent-order-tudo</code> que projeta, implementa, testa e faz deploy não tem foco — e o <code>description</code> fica genérico, então ele é acionado na hora errada. Um trabalho por agent.</li>
+<li><strong><code>tools</code> em excesso é dívida de segurança.</strong> Cada ferramenta extra amplia a superfície de erro. Comece restrito; abra quando doer.</li>
+<li><strong>O modelo errado custa caro nos dois sentidos.</strong> <code>opus</code> para um passe mecânico é desperdício; <code>haiku</code> para um trade-off arquitetural é risco. Casar modelo↔tarefa é uma decisão de engenharia, não um detalhe.</li>
+</ul>
+<h3>Como saber se você entendeu</h3>
+<p>Você dominou este capítulo se consegue:</p>
+<ul>
+<li>escrever um <code>description</code> que diz <em>quando</em> acionar o agent, não só o que ele é;</li>
+<li>justificar a escolha de <code>model</code> e a restrição de <code>tools</code> de um agent;</li>
+<li>explicar como o agent se conecta a cada uma das outras oito camadas.</li>
+</ul>
+<h2>Fontes</h2>
+<ul>
+<li>Anthropic — anthropic-cookbook, exemplos práticos de padrões de agentes e uso de ferramentas: <a href="https://github.com/anthropics/anthropic-cookbook">https://github.com/anthropics/anthropic-cookbook</a></li>
+<li>Claude Code — Subagents (definição, frontmatter, <code>description</code>, <code>tools</code>, <code>model</code>): <a href="https://code.claude.com/docs/en/sub-agents">https://code.claude.com/docs/en/sub-agents</a></li>
+<li>Claude Code — Visão geral: <a href="https://code.claude.com/docs/pt/overview">https://code.claude.com/docs/pt/overview</a></li>
+<li>Anthropic — &quot;Building effective agents&quot; (quando usar agentes vs. workflows): <a href="https://www.anthropic.com/research/building-effective-agents">https://www.anthropic.com/research/building-effective-agents</a></li>
+</ul>
+<h2>Síntese</h2>
+<p>Um agent é um arquivo. Esse arquivo pega o cérebro genérico (LLM), coloca dentro de um corpo com loop (harness), dá a ele um papel (system prompt), uma capacidade (model) e limites (tools). O resultado é um especialista que você pode versionar, revisar em pull request e compartilhar — software, não prompt descartável.</p>
+<p>Mas um especialista sozinho não constrói um CRUD de pedidos de alta confiabilidade. Para isso ele precisa de uma equipe. No próximo capítulo, transformamos este agent em um membro de uma squad.</p>
+<p>Próximo: <a href="04-subagent.md">Capítulo 04 — O Subagent</a>. Antes dele, se você pulou: <a href="01-llm.md">Capítulo 01 — O LLM</a> e <a href="02-harness.md">Capítulo 02 — O Harness</a>.</p>
+</section>
+
+<section id="capitulo-04-o-subagent" class="ebook-section"><h1>Capítulo 04 — O Subagent</h1>
+<blockquote>
+<p>Um subagent é um agent acionado por outro agent, que roda em seu próprio contexto isolado e devolve só o resultado. É como você divide um problema grande em especialistas.</p>
+</blockquote>
+<p><strong>TL;DR:</strong> Subagent é um agent acionado por outro, em contexto isolado — é como você divide um problema grande numa squad sem estourar o contexto do orquestrador.</p>
+<p>No capítulo anterior, construímos o <code>agent-order-architect</code>. Ele projeta bem. Mas projetar não é entregar. Quem implementa os endpoints REST? Quem valida as transições de estado concorrentes? Quem instrumenta as métricas de latência do banco? Um especialista sozinho trava nessa pergunta. A resposta é uma <strong>squad</strong>.</p>
+<h2>Primeiro, o subagent em ação</h2>
+<p>Você dá um objetivo amplo ao orquestrador da squad de pedidos:</p>
+<pre><code class="language-text">&gt; Implemente o CRUD de Pedidos de ponta a ponta: do requisito ao deploy monitorado.
+</code></pre>
+<p>Em vez de tentar fazer tudo sozinho (e estourar o próprio contexto), o <code>agent-order-orchestrator</code> <strong>delega</strong>:</p>
+<pre><code class="language-text">[agent-order-orchestrator]
+
+Decompondo em frentes e acionando a squad:
+
+→ agent-order-product-manager: definir regras e ciclo de vida do pedido
+   ← entregou: 5 estados (draft, created, pending, paid, cancelled), regras de expiração
+→ agent-order-architect: desenhar esquema de tabelas e concorrência
+   ← entregou: schema SQL + optimistic locking + tabela order_events para auditoria
+→ agent-order-backend: implementar controller, service e repositório
+   ← entregou: 6 arquivos, 15 testes passando
+→ agent-order-qa: testar transições ilegais e atualizações concorrentes
+   ← entregou: 2 bugs de concorrência detectados e corrigidos
+→ agent-order-observer: instrumentar logs de erro e alerta de pedidos presos
+   ← entregou: tracing de transição + alerta de pedido pendente &gt; 24h
+
+Integração concluída. CRUD de Pedidos implantado em produção com total segurança.
+</code></pre>
+<p>Cada seta é um <strong>subagent</strong> sendo acionado, fazendo seu trabalho em separado, e devolvendo um resultado conciso. O orquestrador nunca viu os 6 arquivos do backend nem os logs do observer — só recebeu os resumos. Isso é proposital, e é o ponto técnico mais importante deste capítulo.</p>
+<h2>O que é um subagent</h2>
+<blockquote>
+<p>Um <strong>subagent</strong> é um agent invocado por outro agent (em vez de diretamente por você), que executa sua tarefa em uma <strong>janela de contexto própria e isolada</strong> e retorna apenas o resultado final ao agent que o chamou.</p>
+</blockquote>
+<p>Três palavras carregam o peso:</p>
+<ul>
+<li><strong>Invocado por outro agent</strong>: a única diferença entre &quot;agent&quot; e &quot;subagent&quot; é <em>quem chama</em>. O <code>agent-order-architect</code> do Capítulo 03 é um agent quando você fala com ele direto; é um <em>subagent</em> quando o orquestrador o aciona. Mesmo arquivo, papel relacional diferente.</li>
+<li><strong>Contexto próprio e isolado</strong>: cada subagent começa com a janela de contexto limpa. Ele recebe só a tarefa que o pai delegou, não toda a conversa anterior. Os detalhes do trabalho dele também não voltam para o pai — só a conclusão.</li>
+<li><strong>Retorna o resultado final</strong>: o pai recebe um resumo, não o passo a passo. É isso que mantém o contexto do orquestrador enxuto mesmo coordenando nove especialistas.</li>
+</ul>
+<h3>Por que o contexto isolado é o ponto-chave</h3>
+<p>Imagine se o orquestrador fizesse tudo numa única conversa: leria os 6 arquivos do backend, os logs do observer, os schemas do banco. Em poucas etapas, a janela de contexto (Capítulo 05) estaria entupida, e a qualidade despencaria — o modelo se perde quando o contexto fica cheio de detalhe irrelevante.</p>
+<p>Delegar a subagents resolve isso por construção:</p>
+<pre><code class="language-mermaid">graph TD
+    O[&quot;agent-order-orchestrator&lt;br/&gt;(contexto: só objetivos + resumos)&quot;]
+    PM[&quot;product-manager&lt;br/&gt;(contexto próprio)&quot;]
+    AR[&quot;architect&lt;br/&gt;(contexto próprio)&quot;]
+    BE[&quot;backend&lt;br/&gt;(contexto próprio: 6 arquivos)&quot;]
+    QA[&quot;qa&lt;br/&gt;(contexto próprio)&quot;]
+    OB[&quot;observer&lt;br/&gt;(contexto próprio: logs)&quot;]
+
+    O --&gt;|delega tarefa| PM
+    O --&gt;|delega tarefa| AR
+    O --&gt;|delega tarefa| BE
+    O --&gt;|delega tarefa| QA
+    O --&gt;|delega tarefa| OB
+    PM -.resumo.-&gt; O
+    AR -.resumo.-&gt; O
+    BE -.resumo.-&gt; O
+    QA -.resumo.-&gt; O
+    OB -.resumo.-&gt; O
+</code></pre>
+<p>O backend pode mergulhar em 6 arquivos sem poluir o contexto de ninguém. O orquestrador mantém a visão de cima. Esse padrão — um coordenador que distribui para trabalhadores especializados — é o que a Anthropic chama de <em>orchestrator-workers</em> em &quot;Building effective agents&quot;. Subagents são a implementação concreta dele.</p>
+<h2>Estudo de caso: a squad <code>order</code> completa</h2>
+<p>Aqui está a squad real, com <strong>todos os campos preenchidos e justificados</strong>. O domínio é <code>domains/order</code>; o <code>agent-order-orchestrator</code> coordena oito subagents, cada um com um papel distinto, um modelo casado à dificuldade da tarefa e skills reais do repositório.</p>
+<table>
+<thead>
+<tr>
+<th>Subagent</th>
+<th>Papel (1 frase)</th>
+<th><code>model</code></th>
+<th>Por que esse modelo</th>
+<th><code>skills</code></th>
+<th><code>tools</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>agent-order-product-manager</code></td>
+<td>Define requisitos, ciclo de vida e regras de transição de status dos pedidos.</td>
+<td><code>opus</code></td>
+<td>Escopo ambíguo: decidir fluxos de expiração, restrições e regras de negócio.</td>
+<td><code>[to-prd, copywriting]</code></td>
+<td><code>Read, Grep, Glob, Write</code></td>
+</tr>
+<tr>
+<td><code>agent-order-architect</code></td>
+<td>Projeta o esquema de banco, concorrência e máquina de estados antes da escrita de código.</td>
+<td><code>opus</code></td>
+<td>Trade-offs técnicos (optimistic locking, estrutura de eventos de auditoria).</td>
+<td><code>[improve-codebase-architecture, diagnose]</code></td>
+<td><code>Read, Grep, Glob</code></td>
+</tr>
+<tr>
+<td><code>agent-order-backend</code></td>
+<td>Implementa controller, service, persistência e validações de integridade.</td>
+<td><code>sonnet</code></td>
+<td>Execução de um design já definido; volume de código.</td>
+<td><code>[tdd, error-fix-loop]</code></td>
+<td><code>Read, Write, Edit, Bash</code></td>
+</tr>
+<tr>
+<td><code>agent-order-frontend</code></td>
+<td>Implementa a interface do CRUD: listagens, filtros de status, formulários de criação e detalhes.</td>
+<td><code>sonnet</code></td>
+<td>Implementação de componentes a partir do design pronto.</td>
+<td><code>[frontend-design]</code></td>
+<td><code>Read, Write, Edit, Bash</code></td>
+</tr>
+<tr>
+<td><code>agent-order-designer</code></td>
+<td>Desenha a jornada do usuário e estados visuais (rascunho, pendente, pago, cancelado) com acessibilidade.</td>
+<td><code>sonnet</code></td>
+<td>Design dentro de um sistema existente, não pesquisa aberta.</td>
+<td><code>[ui-ux-pro-max]</code></td>
+<td><code>Read, Write, Edit</code></td>
+</tr>
+<tr>
+<td><code>agent-order-qa</code></td>
+<td>Define estratégia de teste e valida concorrência, transições inválidas e validações.</td>
+<td><code>sonnet</code></td>
+<td>Geração de testes a partir de critérios conhecidos.</td>
+<td><code>[tdd, verify]</code></td>
+<td><code>Read, Write, Edit, Bash</code></td>
+</tr>
+<tr>
+<td><code>agent-order-observer</code></td>
+<td>Instrumenta logs, métricas do banco, latência de queries e alertas (ex. pedidos presos).</td>
+<td><code>haiku</code></td>
+<td>Instrumentação repetitiva, alto volume, padrão fixo; escala dúvidas ao architect.</td>
+<td><code>[diagnose]</code></td>
+<td><code>Read, Edit, Bash, Grep</code></td>
+</tr>
+<tr>
+<td><code>agent-order-analytics</code></td>
+<td>Mede conversão de pedidos, ticket médio e funil de compras; monta dashboards.</td>
+<td><code>haiku</code></td>
+<td>Consultas e dashboards a partir de métricas já definidas.</td>
+<td><code>[customer-analyst]</code></td>
+<td><code>Read, Bash</code></td>
+</tr>
+</tbody></table>
+<p>Repare no <strong>model routing</strong> da squad: três <code>opus</code> onde há decisão e ambiguidade (PM, architect — e o orquestrador, abaixo), quatro <code>sonnet</code> onde há execução de um padrão definido, e dois <code>haiku</code> para trabalho mecânico de alto volume. Isso não é economia mesquinha — é casar a dificuldade de cada papel com a capacidade do cérebro, exatamente como discutimos no Capítulo 01.</p>
+<h3>O orquestrador, por completo</h3>
+<p>Salve em <code>.claude/agents/agent-order-orchestrator.md</code>:</p>
+<pre><code class="language-markdown">---
+name: agent-order-orchestrator
+description: Coordena a squad do domínio order de ponta a ponta — do
+  requisito ao deploy monitorado. Use para tarefas amplas de pedidos
+  que cruzam várias frentes (produto, arquitetura, backend, frontend,
+  QA, observabilidade), como lançar um novo fluxo ou transições de estado.
+model: opus            # decompõe objetivos ambíguos e integra resultados
+tools: Agent, Read, Grep, Glob   # delega (Agent) e lê para integrar; não codifica
+skills: [to-issues]    # quebra o objetivo em frentes rastreáveis
+---
+
+# Order Orchestrator
+
+Você coordena a squad de pedidos. Você NÃO implementa: você decompõe,
+delega ao subagent certo e integra os resultados.
+
+## Como você trabalha
+1. Quebre o objetivo em frentes (produto → arquitetura → implementação →
+   QA → observabilidade) usando a skill to-issues.
+2. Acione cada subagent com uma tarefa fechada e o contexto mínimo que
+   ele precisa — nunca despeje a conversa inteira.
+3. Respeite as dependências: requisitos antes de arquitetura; arquitetura
+   antes de implementação; implementação antes de QA.
+4. Integre os resumos devolvidos e reporte o estado consolidado.
+
+## Subagents disponíveis
+- agent-order-product-manager — requisitos e regras de negócio
+- agent-order-architect — design técnico e concorrência (read-only)
+- agent-order-backend — implementação de endpoints e banco
+- agent-order-frontend — listagens e formulários web
+- agent-order-designer — fluxo visual e estados da tela
+- agent-order-qa — testes de carga e concorrência
+- agent-order-observer — alertas e métricas
+- agent-order-analytics — métricas de funil e conversão
+
+## Restrições
+- NÃO escreva código de produção.
+- NÃO pule a etapa de QA antes de declarar &quot;pronto&quot;.
+- Delegue ao subagent de menor privilégio capaz de fazer a tarefa.
+</code></pre>
+<h3>Um subagent executor, por completo</h3>
+<p>Contraste com o orquestrador: o backend é read-write, roda em <code>sonnet</code>, e tem um escopo de execução. Salve em <code>.claude/agents/agent-order-backend.md</code>:</p>
+<pre><code class="language-markdown">---
+name: agent-order-backend
+description: Implementa o lado servidor do CRUD de Pedidos — endpoints REST,
+  validação de máquina de estados e persistência com optimistic locking.
+  Use quando há um design aprovado e é hora de codar o backend de orders.
+model: sonnet          # execução de padrão definido, com volume
+tools: Read, Write, Edit, Bash
+skills: [tdd, error-fix-loop]
+---
+
+# Order Backend
+
+Você implementa o backend de pedidos a partir de um design já
+decidido pelo agent-order-architect.
+
+## Como você trabalha
+1. Comece pelos testes (skill tdd): escreva o teste de comportamento
+   antes do código que o satisfaz.
+2. Garanta concorrência segura: utilize optimistic locking com verificação
+   de versão a cada alteração de status do pedido.
+3. Modele as transições como máquina de estados explícita; nada de alterar status sem validar o estado anterior.
+4. Ao quebrar, use a skill error-fix-loop até os testes passarem.
+
+## Restrições
+- NÃO decida arquitetura — se o design estiver ambíguo, devolva a dúvida
+  ao orquestrador para acionar o architect.
+- NÃO faça deploy. Sua entrega é código testado e verde.
+</code></pre>
+<p>Os outros seis subagents seguem o mesmo molde — <code>name</code>, <code>description</code> com gatilho claro, <code>model</code> casado à dificuldade, <code>tools</code> no menor privilégio, <code>skills</code> reais, e um corpo com &quot;como trabalha&quot; + &quot;restrições&quot;. Nenhum campo fica vazio; cada papel é distinto e não se sobrepõe ao vizinho.</p>
+<h2>Como isso se conecta ao <code>agent</code></h2>
+<p>A ligação é direta, e fecha o arco do capítulo anterior:</p>
+<blockquote>
+<p><strong>Um subagent não é uma coisa nova. É o agent do Capítulo 03, agora acionado por outro agent em vez de por você.</strong></p>
+</blockquote>
+<p>O <code>agent-order-architect</code> que construímos campo a campo no Capítulo 03 aparece aqui sem nenhuma mudança no arquivo — apenas com um novo chamador. O que muda é o <em>relacionamento</em>: ele virou um trabalhador na squad do orquestrador. Essa é a beleza do modelo: você projeta agents como unidades autônomas e os compõe em hierarquias conforme o problema cresce, sem reescrever nada.</p>
+<p>E como cada subagent roda em contexto isolado, eles dependem diretamente da próxima camada — a gestão de contexto. O que o pai passa ao filho, e o que o filho devolve ao pai, é uma decisão de <em>context engineering</em>.</p>
+<h2>Trade-offs e armadilhas</h2>
+<ul>
+<li><strong>Delegar tem custo.</strong> Cada subagent é uma nova rodada de modelo, com seu próprio contexto montado do zero. Para uma tarefa pequena, delegar é mais lento e mais caro que fazer direto. Use squad para problemas que realmente têm frentes distintas.</li>
+<li><strong>Contexto isolado corta os dois lados.</strong> O subagent não vê o que o pai sabe, a menos que o pai passe explicitamente. Esquecer de passar o contexto necessário é a causa nº 1 de subagent que &quot;faz a coisa errada com competência&quot;.</li>
+<li><strong>Fan-out paralelo multiplica tokens.</strong> Acionar oito subagents de uma vez é poderoso e caro. Paralelize quando as frentes são independentes; serialize quando há dependência (requisito → arquitetura → código).</li>
+<li><strong>Orquestrador que implementa vira gargalo.</strong> Se o coordenador começa a codar, ele perde a visão de cima e entope o próprio contexto. Mantenha o orquestrador como coordenador puro (note o <code>tools: Agent, Read, Grep, Glob</code> — sem <code>Write</code>).</li>
+<li><strong>Hierarquia profunda demais confunde.</strong> Subagent chamando subagent chamando subagent fica difícil de depurar. Uma camada de orquestração costuma bastar.</li>
+</ul>
+<h3>Como saber se você entendeu</h3>
+<p>Você dominou este capítulo se consegue:</p>
+<ul>
+<li>explicar por que o contexto isolado mantém o orquestrador enxuto;</li>
+<li>justificar o <em>model routing</em> da squad (quem é opus, sonnet, haiku e por quê);</li>
+<li>decidir quando vale delegar a subagents e quando não compensa.</li>
+</ul>
+<h2>Fontes</h2>
+<ul>
+<li>Anthropic — courses, materiais oficiais sobre construir aplicações com Claude (inclui padrões de orquestração): <a href="https://github.com/anthropics/courses">https://github.com/anthropics/courses</a></li>
+<li>Anthropic — &quot;Building effective agents&quot; (padrão <em>orchestrator-workers</em>, quando dividir o trabalho): <a href="https://www.anthropic.com/research/building-effective-agents">https://www.anthropic.com/research/building-effective-agents</a></li>
+<li>Claude Code — Subagents (definição, contexto isolado, invocação): <a href="https://code.claude.com/docs/en/sub-agents">https://code.claude.com/docs/en/sub-agents</a></li>
+<li>Claude Code — visão geral: <a href="https://code.claude.com/docs/pt/overview">https://code.claude.com/docs/pt/overview</a></li>
+</ul>
+<h2>Síntese</h2>
+<p>Subagent é como você escala um agent de &quot;especialista solo&quot; para &quot;squad&quot;. A mecânica é simples — um agent aciona outro — mas a consequência arquitetural é grande: cada subagent roda em contexto isolado, mantém o pai enxuto e divide um problema grande em pedaços que cabem na cabeça de um modelo. A squad <code>order</code>, com seu orquestrador e oito especialistas, é esse padrão levado a sério.</p>
+<p>E tudo isso gira em torno de uma pergunta: o que cada agent enxerga? A resposta é a próxima camada.</p>
+<p>Próximo: <a href="05-context.md">Capítulo 05 — O Context</a>.</p>
+</section>
+
+<section id="capitulo-05-o-context" class="ebook-section"><h1>Capítulo 05 — O Context</h1>
+<blockquote>
+<p>Context é tudo que o modelo enxerga em uma única chamada. É um recurso finito. Engenheirar o que entra nele é metade do resultado.</p>
+</blockquote>
+<p><strong>TL;DR:</strong> Context é a memória de trabalho finita do modelo; curar o que entra — recuperar, isolar, compactar, persistir — é metade do resultado.</p>
+<p>Nos capítulos anteriores, o <code>agent-order-architect</code> &quot;leu o seu código&quot; antes de opinar, e cada subagent rodou em &quot;contexto isolado&quot;. Agora abrimos essa caixa: o que exatamente o modelo vê, por que isso é limitado, e como você controla.</p>
+<h2>Primeiro, o context em ação</h2>
+<p>Quando o <code>agent-order-architect</code> é acionado, o modelo não recebe &quot;o seu projeto&quot;. Ele recebe uma montagem específica de texto — a janela de contexto daquela chamada:</p>
+<pre><code class="language-text">┌─ Janela de contexto (uma chamada ao LLM) ────────────────────┐
+│ [system prompt]                                              │
+│   &quot;Você projeta a arquitetura do domínio order...&quot;           │
+│   (o corpo do .md do agent — sempre presente)                │
+│                                                              │
+│ [memória do projeto]                                         │
+│   CLAUDE.md: &quot;Pedidos usam optimistic locking e Postgres.&quot;   │
+│                                                              │
+│ [mensagem do usuário]                                        │
+│   &quot;Criar sistema robusto de CRUD de Pedidos — arquitetura&quot;   │
+│                                                              │
+│ [resultado de ferramenta]                                    │
+│   Read(src/orders/OrderService.ts) → 110 linhas              │
+│                                                              │
+│ [resultado de ferramenta]                                    │
+│   Grep(&quot;version&quot;) → version: number;                         │
+└──────────────────────────────────────────────────────────────┘
+                         ↓
+              o modelo responde com base
+              SOMENTE no que está aí dentro
+</code></pre>
+<p>Duas conclusões saltam:</p>
+<ol>
+<li><strong>Se algo não está na janela, para o modelo não existe.</strong> O <code>Grep(&quot;version&quot;)</code> encontrou a propriedade <code>version</code> — então o modelo conclui, corretamente, que há controle de versão ativo. A presença ou ausência são informações chave.</li>
+<li><strong>A janela tem um tamanho máximo.</strong> Não cabe o repositório inteiro. Alguém precisa escolher <em>quais</em> 110 linhas entram. Esse alguém é o harness, guiado pelo que o agent pede.</li>
+</ol>
+<h2>O que é o context</h2>
+<blockquote>
+<p>O <strong>context</strong> (ou <em>janela de contexto</em>) é o conjunto total de tokens que o LLM recebe em uma chamada: o system prompt, a memória carregada, o histórico da conversa, os resultados de ferramentas e quaisquer arquivos recuperados. É a única coisa sobre a qual o modelo raciocina — e tem um limite rígido de tamanho.</p>
+</blockquote>
+<p>Pense no context como a <strong>memória de trabalho</strong> (a RAM) do modelo, não o disco. O modelo não &quot;lembra&quot; do seu projeto entre chamadas; a cada chamada, o que importa precisa estar carregado na janela. Quando a chamada termina, some.</p>
+<h3>O que vive na janela</h3>
+<table>
+<thead>
+<tr>
+<th>Parte</th>
+<th>O que é</th>
+<th>No nosso exemplo</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>System prompt</td>
+<td>As instruções do agent (o corpo do <code>.md</code>)</td>
+<td>&quot;Você projeta a arquitetura...&quot;</td>
+</tr>
+<tr>
+<td>Memória</td>
+<td>Fatos persistentes do projeto, carregados sempre</td>
+<td><code>CLAUDE.md</code>: optimistic locking, Postgres</td>
+</tr>
+<tr>
+<td>Mensagens</td>
+<td>O histórico da conversa atual</td>
+<td>pedido do usuário + respostas</td>
+</tr>
+<tr>
+<td>Resultados de ferramentas</td>
+<td>Saída de <code>Read</code>, <code>Bash</code>, <code>Grep</code>, MCP…</td>
+<td>conteúdo dos arquivos, saída de testes</td>
+</tr>
+<tr>
+<td>Recuperação</td>
+<td>Trechos buscados sob demanda</td>
+<td>o <code>OrderService.ts</code></td>
+</tr>
+</tbody></table>
+<p>A soma de tudo isso precisa caber no limite da janela. Estourou, algo é cortado ou compactado.</p>
+<h2>Context engineering: o trabalho de curar a janela</h2>
+<p>Como a janela é finita e o modelo raciocina só sobre ela, decidir <strong>o que entra</strong> é uma disciplina de engenharia. A Anthropic chama isso de <em>context engineering</em> — a evolução do &quot;prompt engineering&quot; quando o que importa não é só a frase que você escreve, mas todo o estado que o modelo recebe.</p>
+<p>O princípio central: <strong>sinal sobre ruído.</strong> Tanto faltar informação quanto sobrar lixo degradam a resposta. Encher a janela com 50 arquivos &quot;por garantia&quot; não ajuda — piora, porque o modelo se distrai e perde o que importa no meio (o fenômeno <em>lost in the middle</em>, em que informação no meio de um contexto longo é menos aproveitada que no início ou no fim).</p>
+<p>As técnicas que você já viu, agora nomeadas:</p>
+<ul>
+<li><strong>Recuperação seletiva.</strong> Trazer só os arquivos relevantes (via <code>Grep</code>/<code>Glob</code> antes de <code>Read</code>), não o repositório inteiro. O architect achou <code>OrderService.ts</code> com um grep, não lendo tudo.</li>
+<li><strong>Isolamento por subagent (Capítulo 04).</strong> Delegar mantém o contexto do orquestrador limpo: o backend mergulha em 6 arquivos no <em>seu</em> contexto; o pai só recebe o resumo.</li>
+<li><strong>Compactação.</strong> Quando a conversa fica longa, o harness resume o histórico antigo para liberar espaço, preservando as decisões e descartando o ruído. É como o agente &quot;anota o que importa e esquece o resto&quot;.</li>
+<li><strong>Memória persistente.</strong> O que precisa sobreviver entre sessões não vive na conversa — vive em arquivos de memória. No Claude Code, o <code>CLAUDE.md</code> (ou <code>AGENTS.md</code>) carrega convenções e fatos do projeto em toda sessão, e há memória de longo prazo em arquivos dedicados. Foi assim que &quot;locking, Postgres&quot; apareceu na janela sem você redigitar.</li>
+<li><strong>Hooks que injetam contexto.</strong> Eventos do harness podem inserir informação na janela automaticamente (por exemplo, lembrar uma regra antes de uma ferramenta rodar). Voltamos a hooks no Capítulo 07.</li>
+</ul>
+<h2>Como isso se conecta ao <code>agent</code></h2>
+<p>A relação é dupla, e define a qualidade do agent:</p>
+<blockquote>
+<p><strong>O system prompt do agent é a parte permanente do contexto; tudo o mais é montado em volta dele a cada chamada.</strong></p>
+</blockquote>
+<ol>
+<li><strong>O <code>.md</code> do agent ocupa contexto sempre.</strong> Por isso um system prompt enxuto e preciso vale mais que um prolixo — cada token de instrução é um token a menos para o trabalho. O contrato em três seções (<code>o que entrega</code> / <code>como trabalha</code> / <code>restrições</code>) do Capítulo 03 é curto de propósito.</li>
+<li><strong>As <code>tools</code> do agent moldam o que entra depois.</strong> Dar <code>Grep, Glob</code> ao architect é o que permite a ele <em>encontrar</em> o arquivo certo antes de lê-lo — recuperação seletiva por design. Um agent sem ferramentas de busca tende a pedir arquivos errados e a entupir o contexto.</li>
+<li><strong><code>model</code> define o tamanho da janela disponível.</strong> Modelos diferentes têm janelas diferentes; escolher o modelo (Capítulo 01) é também escolher quanto contexto cabe.</li>
+</ol>
+<p>Em uma frase: <strong>o agent é, em boa parte, uma decisão de context engineering congelada em um arquivo.</strong> O que he instrui, o que ele pode buscar e qual cérebro ele usa determinam o que cabe na janela quando ele trabalha.</p>
+<h2>Trade-offs e armadilhas</h2>
+<ul>
+<li><strong>Mais contexto não é melhor contexto.</strong> Passar tudo &quot;por segurança&quot; dilui o sinal e custa mais tokens. Curar é melhor que despejar.</li>
+<li><strong>Contexto é dinheiro e latência.</strong> Cada token na janela é cobrado e processado. Janelas enormes são lentas e caras — use o espaço com intenção.</li>
+<li><strong>O que não entra, não existe.</strong> Bugs de agente frequentemente são bugs de contexto: a informação certa nunca chegou à janela. Antes de culpar o modelo, pergunte &quot;ele viu o que precisava ver?&quot;.</li>
+<li><strong>Compactação perde nuance.</strong> Resumir libera espaço mas pode descartar um detalhe que importava. Decisões críticas merecem virar memória persistente, não ficar à mercê da compactação.</li>
+<li><strong>Lost in the middle.</strong> Em contextos longos, ponha o mais importante no começo ou no fim, não enterrado no meio.</li>
+</ul>
+<h3>Como saber se você entendeu</h3>
+<p>Você dominou este capítulo se consegue:</p>
+<ul>
+<li>listar o que vive na janela de contexto;</li>
+<li>explicar o fenômeno <em>lost in the middle</em> e como mitigá-lo;</li>
+<li>justificar por que &quot;o que não entra no contexto não existe para o modelo&quot;.</li>
+</ul>
+<h2>Fontes</h2>
+<ul>
+<li>Liu et al., &quot;Lost in the Middle: How Language Models Use Long Contexts&quot; (2023) — o estudo por trás do fenômeno citado: <a href="https://arxiv.org/abs/2307.03172">https://arxiv.org/abs/2307.03172</a></li>
+<li>Anthropic — &quot;Effective context engineering for AI agents&quot;: <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents</a></li>
+<li>Anthropic — engenharia de prompt (boas práticas que valem para o contexto): <a href="https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview">https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview</a></li>
+<li>Claude Code — memória (<code>CLAUDE.md</code>, memória de projeto e de usuário): <a href="https://code.claude.com/docs/en/memory">https://code.claude.com/docs/en/memory</a></li>
+</ul>
+<h2>Síntese</h2>
+<p>Context é a memória de trabalho do modelo: finita, montada a cada chamada, e a única coisa sobre a qual ele raciocina. Engenheirar o que entra — recuperar o relevante, isolar por subagent, compactar o histórico, persistir o essencial em memória — é o que separa um agente que acerta de um que alucina por falta de informação. O agent, no fundo, é uma curadoria de contexto salva em disco.</p>
+<p>Mas há um tipo de conhecimento que você não quer recarregar a cada chamada nem deixar morrer na compactação: o know-how reutilizável. Para isso existe uma camada própria.</p>
+<p>Próximo: <a href="06-skill.md">Capítulo 06 — A Skill</a>.</p>
+</section>
+
+<section id="capitulo-06-o-skill" class="ebook-section"><h1>Capítulo 06 — A Skill</h1>
+<blockquote>
+<p>Uma skill é conhecimento empacotado, carregado sob demanda. Ela estende um agent sem inchar o contexto dele — só entra na janela quando é relevante.</p>
+</blockquote>
+<p><strong>TL;DR:</strong> Skill é conhecimento empacotado, carregado sob demanda por <em>progressive disclosure</em> — estende o agent sem inchar o system prompt.</p>
+<p>No capítulo anterior vimos que o contexto é finito e que o system prompt do agent ocupa espaço o tempo todo. Surge um problema: e o conhecimento especializado que o agent só precisa às vezes? Colocar tudo no prompt incha a janela em toda chamada. Não colocar nada deixa o agent ignorante. A skill resolve esse dilema.</p>
+<h2>Primeiro, a skill em ação</h2>
+<p>O <code>agent-order-architect</code> está desenhando o fluxo do CRUD de Pedidos (Orders) e chega no ponto crítico: concorrência e transições inválidas. Isso exige conhecimento específico — optimistic locking, controle de versão (<code>version</code>) e modelagem rígida de máquina de estados. Esse know-how <strong>não está</strong> no system prompt dele (que é curto). Ele está numa skill, que o agente carrega no momento certo:</p>
+<pre><code class="language-text">[agent-order-architect]
+
+A tarefa envolve concorrência e integridade de transição de status.
+→ Carregando skill: improve-codebase-architecture
+
+  (a skill traz para o contexto: padrões de concorrência com optimistic locking,
+   regras estritas de transições de máquina de estados e logs de auditoria)
+
+Com esse material, a decisão fica:
+- Concorrência = optimistic locking via verificação incremental do campo `version`.
+- Transições válidas = draft -&gt; created -&gt; pending -&gt; paid | cancelled.
+- Auditoria = gravar transição na tabela order_events no mesmo transaction block.
+</code></pre>
+<p>Antes dessa tarefa, o conhecimento de padrões de concorrência e integridade <strong>não ocupava</strong> nenhum espaço no contexto do agente. Ele entrou só quando a tarefa pediu, e poderia sair depois. Esse carregamento sob demanda é a essência da skill.</p>
+<h2>O que é uma skill</h2>
+<blockquote>
+<p>Uma <strong>skill</strong> é uma capacidade empacotada — uma pasta com um arquivo <code>SKILL.md</code> (instruções + metadados) e, opcionalmente, recursos como scripts e documentos de referência — que o agente carrega <strong>sob demanda</strong>, quando a tarefa atual casa com a descrição da skill.</p>
+</blockquote>
+<p>A anatomia mínima, no Claude Code:</p>
+<pre><code class="language-text">.claude/skills/improve-codebase-architecture/
+├── SKILL.md            # frontmatter (name, description) + instruções
+├── reference.md        # material aprofundado (carregado só se preciso)
+└── scripts/
+    └── analyze.ts      # código que a skill pode rodar (ex.: TypeScript CLI)
+</code></pre>
+<p>E o <code>SKILL.md</code> em si, no mesmo formato dos que já existem neste repositório:</p>
+<pre><code class="language-markdown">---
+name: improve-codebase-architecture
+description: Encontra oportunidades de aprofundar a arquitetura de um
+  código. Use ao melhorar arquitetura, achar refatorações, consolidar
+  módulos acoplados ou tornar o código mais testável. Inclui padrões
+  de concorrência, máquina de estados e auditoria de eventos.
+---
+
+# improve-codebase-architecture
+
+## Padrões de Concorrência
+- Controle concorrente com optimistic locking via versão (`version` check).
+
+## Máquina de Estados
+- Modele transições válidas de forma explícita; barre transições proibidas (ex. de cancelado para pago).
+
+## Quando NÃO aplicar
+- ...
+</code></pre>
+<p>Note: o formato é exatamente o que você já viu nas skills do repo — frontmatter com <code>name</code> e <code>description</code>, e um corpo em Markdown. A skill é, literalmente, conhecimento escrito como documento, com metadados que dizem quando usá-lo.</p>
+<h2>Progressive disclosure: o truque que torna skills baratas</h2>
+<p>Aqui está o mecanismo que faz skills funcionarem sem entupir o contexto — <em>progressive disclosure</em> (revelação progressiva), em três níveis:</p>
+<pre><code class="language-mermaid">graph TD
+    N1[&quot;Nível 1: só o description&lt;br/&gt;(sempre no contexto, ~1 linha)&quot;]
+    N2[&quot;Nível 2: o SKILL.md inteiro&lt;br/&gt;(carregado quando a tarefa casa)&quot;]
+    N3[&quot;Nível 3: reference.md, scripts&lt;br/&gt;(carregados só se realmente precisar)&quot;]
+    N1 --&gt;|tarefa casa com o gatilho| N2
+    N2 --&gt;|precisa de detalhe/execução| N3
+</code></pre>
+<ul>
+<li><strong>Nível 1 — sempre presente, custo mínimo.</strong> Só a <code>description</code> de cada skill fica no contexto o tempo todo. É como um índice: dezenas de skills custam pouquíssimos tokens, porque só os &quot;títulos&quot; estão carregados.</li>
+<li><strong>Nível 2 — sob demanda.</strong> Quando a tarefa atual casa com a <code>description</code> de uma skill, o <code>SKILL.md</code> completo entra na janela. Foi o que aconteceu quando o architect chegou em &quot;idempotência&quot;.</li>
+<li><strong>Nível 3 — só se necessário.</strong> Arquivos de referência e scripts dentro da pasta só são lidos se a tarefa exigir aquele detalhe. O agente carrega o <code>reference.md</code> apenas se o resumo do <code>SKILL.md</code> não bastar.</li>
+</ul>
+<p>É o mesmo princípio do Capítulo 05 (sinal sobre ruído) aplicado ao conhecimento: você pode ter centenas de skills disponíveis, mas só paga o contexto das que de fato usa, no momento em que usa. Por isso a <code>description</code> da skill é tão crítica quanto a do agent — é ela que decide se a skill é &quot;descoberta&quot; na hora certa.</p>
+<h2>Skill, agent e subagent: quem é o quê</h2>
+<p>Esses três se confundem. A distinção:</p>
+<table>
+<thead>
+<tr>
+<th>Conceito</th>
+<th>É um…</th>
+<th>Tem estado/loop?</th>
+<th>Reutilizável por…</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Agent</strong></td>
+<td>trabalhador com um papel</td>
+<td>sim (roda no harness)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>Subagent</strong></td>
+<td>agent acionado por outro</td>
+<td>sim</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>Skill</strong></td>
+<td>conhecimento/capacidade empacotada</td>
+<td>não (é material, não trabalhador)</td>
+<td>vários agents</td>
+</tr>
+</tbody></table>
+<p>A frase de bolso: <strong>um agent é quem faz; uma skill é o que ele sabe.</strong> Uma mesma skill (<code>tdd</code>, por exemplo) pode ser usada pelo <code>agent-order-backend</code> e pelo <code>agent-order-qa</code> — o conhecimento é compartilhado, os trabalhadores são distintos.</p>
+<h3>Skills vs Commands (Slash Commands)</h3>
+<p>Com a evolução das ferramentas CLI como o Claude Code, surge outra distinção vital: as <strong>skills</strong> vs. os <strong>commands</strong> (slash commands).</p>
+<ul>
+<li><strong>Skills:</strong> São carregadas pelo harness de forma semântica e <strong>implícita</strong>. O agente lê o histórico de conversa, percebe a necessidade (&quot;preciso de concorrência&quot;) e puxa o <code>SKILL.md</code> correspondente. É um fluxo transparente e orientado à cognição.</li>
+<li><strong>Commands (Slash Commands):</strong> São chamados imperativos e <strong>explícitos</strong> disparados por você no terminal (ex.: <code>/goal</code>, <code>/schedule</code>, <code>/grill-me</code>). Eles iniciam fluxos de controle estruturados ou scripts determinísticos, sem depender do julgamento do modelo para ativação.</li>
+</ul>
+<p>A frase de bolso: <em>Skills estendem a cognição do agente de forma implícita; Commands estendem a capacidade de operação da cabine (CLI) de forma explícita.</em></p>
+<h3>Skills Auto-Melhoráveis: O Próximo Nível</h3>
+<p>Uma categoria emergente do ecossistema são as <strong>Skills Auto-Melhoráveis</strong> (self-improving skills). Um exemplo real do repositório é o harness de feedback-loop (ex.: <code>skill-recursiva-feedback-loop-harness</code>).
+Essas skills não contêm apenas instruções estáticas; elas contêm loops estruturados de auto-correção que instruem o agente a entrar em ciclos recursivos de:</p>
+<ol>
+<li>Propor uma correção de código.</li>
+<li>Rodar a suite de verificação/testes via tool (<code>Bash</code>).</li>
+<li>Se falhar, consumir o log de erro, alimentar a própria memória de trabalho e ajustar recursivamente o código sem pedir intervenção humana.</li>
+</ol>
+<p>Isso automatiza o fluxo de &quot;Error Fix Loop&quot; (EFL), minimizando a latência de desenvolvimento.</p>
+<h3>Recomendação CRÍTICA: Evite a Explosão de Tokens</h3>
+<blockquote>
+<p>[!IMPORTANT]
+<strong>O desenvolvedor deve testar o uso sem skills primeiro para evitar a explosão de tokens.</strong></p>
+<p>Embora skills sejam úteis, toda skill ativa consome o limite da janela de contexto (RAM) com tokens adicionais. Para tarefas triviais ou mecânicas, confie na inteligência bruta do modelo e nas diretrizes simples do <code>CLAUDE.md</code>. Ative ou crie skills apenas quando houver necessidade real de know-how denso e reutilizável.</p>
+</blockquote>
+<h2>Como isso se conecta ao <code>agent</code></h2>
+<p>Lembra do frontmatter do Capítulo 03?</p>
+<pre><code class="language-yaml">skills: [improve-codebase-architecture, diagnose]
+</code></pre>
+<p>Agora essa linha tem significado completo:</p>
+<blockquote>
+<p><strong>A skill é como você estende o que um agent sabe fazer sem inchar o system prompt dele.</strong></p>
+</blockquote>
+<ol>
+<li><strong>O agent declara afinidade com skills.</strong> O campo <code>skills</code> diz quais pacotes de conhecimento aquele papel costuma precisar. É uma dica de quais skills são relevantes para o trabalho dele.</li>
+<li><strong>O conhecimento fica fora do prompt.</strong> Em vez de despejar &quot;como projetar concorrência&quot; no system prompt do architect (custando contexto em toda chamada), isso vive na skill e entra só quando a tarefa pede. O prompt do agent continua curto; a competência, sob demanda.</li>
+<li><strong>Skills são compartilhadas entre agents.</strong> A squad inteira do Capítulo 04 referencia skills reais (<code>tdd</code>, <code>frontend-design</code>, <code>ui-ux-pro-max</code>…). Cada subagent puxa o conhecimento de que precisa, sem duplicar nada.</li>
+</ol>
+<p>Skill está para conhecimento como subagent está para trabalho: as duas camadas existem para manter cada agent <strong>focado e enxuto</strong>, delegando o que não precisa estar sempre presente.</p>
+<h2>Trade-offs e armadilhas</h2>
+<ul>
+<li><strong>A <code>description</code> é tudo.</strong> Se ela não descreve bem <em>quando</em> usar a skill, a skill nunca é carregada — vira código morto. Escreva o gatilho com situações concretas, como no <code>description</code> do agent.</li>
+<li><strong>Skill não é agent.</strong> Não tente colocar &quot;comportamento autônomo&quot; numa skill. Skill é material que um agent consome; quem age é o agent.</li>
+<li><strong>Excesso de skills polui o nível 1.</strong> Cada skill custa sua <code>description</code> no contexto permanente. Centenas de skills mal descritas viram ruído de índice. Mantenha o catálogo curado.</li>
+<li><strong>Conhecimento desatualizado é pior que ausente.</strong> Uma skill com um padrão obsoleto faz o agent errar com confiança. Skills precisam de manutenção como qualquer documentação.</li>
+</ul>
+<h3>Como saber se você entendeu</h3>
+<p>Você dominou este capítulo se consegue:</p>
+<ul>
+<li>explicar os três níveis do <em>progressive disclosure</em>;</li>
+<li>diferenciar skill, command, agent e subagent;</li>
+<li>justificar por que testar sem skills primeiro é uma prática recomendada de economia de tokens.</li>
+</ul>
+<h2>Fontes</h2>
+<ul>
+<li>Anthropic — courses, exemplos oficiais de capacidades e padrões com Claude: <a href="https://github.com/anthropics/courses">https://github.com/anthropics/courses</a></li>
+<li>Claude Code — Skills (estrutura, <code>SKILL.md</code>, progressive disclosure): <a href="https://code.claude.com/docs/en/skills">https://code.claude.com/docs/en/skills</a></li>
+<li>Anthropic — &quot;Equipping agents for the real world with Agent Skills&quot;: <a href="https://www.anthropic.com/news/agent-skills">https://www.anthropic.com/news/agent-skills</a></li>
+<li>Claude Code — visão geral: <a href="https://code.claude.com/docs/pt/overview">https://code.claude.com/docs/pt/overview</a></li>
+</ul>
+<h2>Síntese</h2>
+<p>Skill é conhecimento como documento, carregado sob demanda por <em>progressive disclosure</em>: só a descrição fica sempre no contexto; o conteúdo entra quando a tarefa casa. Isso permite que um agent enxuto tenha acesso a muita competência sem pagar o contexto dela o tempo todo. O <code>skills: [...]</code> do agent é a ponte entre o trabalhador e o que ele sabe.</p>
+<p>Já temos agents, subagents, contexto e skills. Mas como você empacota tudo isso — uma squad inteira com suas skills, hooks e conexões — para instalar em outro repositório com um comando? Essa é a próxima camada.</p>
+<p>Próximo: <a href="07-plugin.md">Capítulo 07 — O Plugin</a>.</p>
+</section>
+
+<section id="capitulo-07-plugin" class="ebook-section"><h1>Capítulo 07 — O Plugin</h1>
+<blockquote>
+<p>Um plugin empacota agents, skills, comandos, hooks e configuração de MCP em uma unidade instalável. É como você distribui uma squad inteira entre times com um comando.</p>
+</blockquote>
+<p><strong>TL;DR:</strong> Plugin empacota agents, skills, comandos, hooks e MCP numa unidade versionada e instalável — é a unidade de <em>entrega</em> do que o agent precisa para funcionar em outro lugar.</p>
+<p>Você construiu a squad <code>order</code>: nove agents, suas skills, suas convenções. Funciona no seu repositório. Agora o time de outro produto quer a mesma coisa. Como você entrega? Copiando dezenas de arquivos à mão? Há uma camada para isso.</p>
+<h2>Primeiro, o plugin em ação</h2>
+<p>Sem plugin, &quot;compartilhar a squad&quot; significa copiar <code>.claude/agents/*.md</code> (nove arquivos), <code>.claude/skills/*</code> (as skills referenciadas), os hooks, a configuração de MCP — e torcer para não esquecer nada nem versão. Com plugin, é um comando:</p>
+<pre><code class="language-text">&gt; /plugin marketplace add minhaempresa/order-squad
+&gt; /plugin install order-squad
+
+Instalado order-squad v1.2.0:
+  • 9 agents (orchestrator + 8 subagents)
+  • 4 skills (concorrência, auditoria, ...)
+  • 2 hooks (valida concorrência antes de commit; bloqueia segredo em log)
+  • 1 servidor MCP (database inspector)
+  • 1 comando: /order-new-field
+</code></pre>
+<p>Em uma linha, o outro time ganhou a squad completa, versionada, com tudo que ela precisa para funcionar. Atualizou? <code>/plugin update order-squad</code> e todos recebem a v1.3.0. Isso é distribuição de verdade, não copia-e-cola.</p>
+<h2>O que é um plugin</h2>
+<blockquote>
+<p>Um <strong>plugin</strong> é um pacote distribuível que agrupa um ou mais componentes do Claude Code — agents, skills, comandos (<em>slash commands</em>), hooks e configuração de servidores MCP — sob um manifesto versionado, instalável a partir de um <em>marketplace</em>.</p>
+</blockquote>
+<p>O plugin não é uma camada nova de capacidade. É uma camada de <strong>empacotamento e distribuição</strong> das camadas que você já conhece. Ele responde à pergunta &quot;como eu levo isto para outro lugar de forma confiável?&quot;.</p>
+<h3>Anatomia de um plugin</h3>
+<pre><code class="language-text">order-squad/
+├── .claude-plugin/
+│   └── plugin.json          # manifesto: nome, versão, descrição, autor
+├── agents/                  # os 9 agents da squad
+│   ├── agent-order-orchestrator.md
+│   ├── agent-order-architect.md
+│   └── ...
+├── skills/                  # skills que a squad usa
+│   └── improve-codebase-architecture/SKILL.md
+├── commands/                # slash commands
+│   └── order-new-field.md
+├── hooks/                   # automações por evento
+│   └── hooks.json
+└── .mcp.json                # servidores MCP que a squad conecta (Cap. 08)
+</code></pre>
+<p>E o manifesto, <code>plugin.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;order-squad&quot;,
+  &quot;version&quot;: &quot;1.2.0&quot;,
+  &quot;description&quot;: &quot;Squad completa do domínio order: orquestrador, 8 subagents, skills de concorrência e máquina de estados.&quot;,
+  &quot;author&quot;: &quot;minhaempresa&quot;
+}
+</code></pre>
+<p>O <strong>marketplace</strong> é só um repositório (git, por exemplo) com um catálogo desses plugins. <code>/plugin marketplace add &lt;repo&gt;</code> registra a fonte; <code>/plugin install &lt;nome&gt;</code> instala dali. É o mesmo modelo mental de um gerenciador de pacotes — <code>npm</code>/<code>cargo</code> para extensões do seu agente.</p>
+<h2>Hooks: a peça que o plugin frequentemente carrega</h2>
+<p>Mencionamos hooks de passagem nos capítulos 02 e 05. Aqui eles ganham forma, porque plugins são o jeito comum de distribuí-los.</p>
+<blockquote>
+<p>Um <strong>hook</strong> é um comando de shell que o harness dispara automaticamente em um evento do ciclo de vida — antes de uma ferramenta rodar (<code>PreToolUse</code>), depois (<code>PostToolUse</code>), quando a sessão tenta encerrar (<code>Stop</code>), entre outros.</p>
+</blockquote>
+<p>Exemplo concreto, no <code>hooks.json</code> do plugin:</p>
+<pre><code class="language-json">{
+  &quot;hooks&quot;: {
+    &quot;PreToolUse&quot;: [
+      {
+        &quot;matcher&quot;: &quot;Bash&quot;,
+        &quot;hooks&quot;: [
+          { &quot;type&quot;: &quot;command&quot;, &quot;command&quot;: &quot;scripts/bloqueia-segredo-em-log.sh&quot; }
+        ]
+      }
+    ]
+  }
+}
+</code></pre>
+<p>Esse hook roda antes de qualquer <code>Bash</code> e pode barrar um comando que vaze segredo em log. O ponto: hooks impõem política <strong>deterministicamente</strong>, fora do modelo. O LLM pode &quot;querer&quot; rodar algo perigoso; o hook decide se acontece — exatamente a fronteira de permissões do Capítulo 02, agora programável e distribuível dentro do plugin.</p>
+<h2>Como isso se conecta ao <code>agent</code></h2>
+<p>A relação fecha a pergunta de distribuição:</p>
+<blockquote>
+<p><strong>O agent é o arquivo. O plugin é o formato de distribuição que leva esse arquivo — e tudo de que ele depende — para outro lugar, versionado.</strong></p>
+</blockquote>
+<ol>
+<li><strong>O plugin empacota agents.</strong> A squad <code>order</code> inteira (Capítulo 04) cabe num plugin. Quem instala recebe o orquestrador e os oito subagents prontos.</li>
+<li><strong>E empacota o que os agents precisam.</strong> Um agent sozinho não basta: ele referencia skills (Capítulo 06), conecta servidores MCP (Capítulo 08) e depende de hooks de política. O plugin junta tudo isso, então o agent funciona igual no destino.</li>
+<li><strong>Versiona o conjunto.</strong> <code>agent-order-architect</code> v1.2.0 vem com as skills e a configuração de MCP daquela versão. Atualizar o plugin atualiza o conjunto coerente, não peças soltas que podem divergir.</li>
+</ol>
+<p>Em uma frase: <strong>se o agent é a unidade de trabalho, o plugin é a unidade de entrega.</strong></p>
+<h2>Trade-offs e armadilhas</h2>
+<ul>
+<li><strong>Instalar plugin é confiar.</strong> Um plugin pode trazer hooks (comandos de shell) e servidores MCP (acesso a sistemas). Instalar um plugin de terceiro é rodar o código dele na sua máquina. Trate marketplaces como você trata dependências: audite a fonte.</li>
+<li><strong>Versão acopla componentes.</strong> A vantagem (conjunto coerente) é também o risco: um bug numa skill do plugin afeta todos os agents que a usam. Versione com cuidado e teste antes de subir.</li>
+<li><strong>Marketplace exige curadoria.</strong> Um catálogo cheio de plugins redundantes ou mal descritos vira ruído. Mantenha o seu enxuto e bem documentado.</li>
+<li><strong>Nem tudo precisa ser plugin.</strong> Para um agent usado só no seu repo, o arquivo em <code>.claude/agents/</code> basta. Plugin é para o que você <em>distribui</em>.</li>
+</ul>
+<h3>Como saber se você entendeu</h3>
+<p>Você dominou este capítulo se consegue:</p>
+<ul>
+<li>listar o que um plugin pode empacotar;</li>
+<li>explicar o papel de um hook <code>PreToolUse</code> na fronteira de permissões;</li>
+<li>justificar por que instalar um plugin de terceiros é uma decisão de confiança.</li>
+</ul>
+<h2>Fontes</h2>
+<ul>
+<li>Anthropic — anthropic-cookbook, exemplos de extensão e automação com Claude: <a href="https://github.com/anthropics/anthropics-cookbook">https://github.com/anthropics/anthropics-cookbook</a></li>
+<li>Claude Code — Plugins (estrutura, <code>plugin.json</code>, instalação): <a href="https://code.claude.com/docs/en/plugins">https://code.claude.com/docs/en/plugins</a></li>
+<li>Claude Code — Plugin marketplaces (publicar e instalar): <a href="https://code.claude.com/docs/en/plugin-marketplaces">https://code.claude.com/docs/en/plugin-marketplaces</a></li>
+<li>Claude Code — Hooks (eventos, <code>PreToolUse</code>/<code>PostToolUse</code>/<code>Stop</code>): <a href="https://code.claude.com/docs/en/hooks">https://code.claude.com/docs/en/hooks</a></li>
+</ul>
+<h2>Síntese</h2>
+<p>Plugin é a camada de empacotamento: ele pega agents, skills, comandos, hooks e configuração de MCP e os transforma em uma unidade versionada e instalável, distribuída por um marketplace. É o que faz a sua squad <code>order</code> deixar de ser &quot;um monte de arquivos no meu repo&quot; e virar &quot;um pacote que qualquer time instala em um comando&quot;.</p>
+<p>Sobrou uma dependência que o plugin empacota mas ainda não explicamos: como o agent fala com o mundo externo — o Postgres, o banco de dados de produção de verdade. Esse é o protocolo da próxima camada.</p>
+<p>Próximo: <a href="08-mcp.md">Capítulo 08 — O MCP</a>.</p>
+</section>
+
+<section id="capitulo-08-mcp" class="ebook-section"><h1>Capítulo 08 — O MCP</h1>
+<blockquote>
+<p>MCP (Model Context Protocol) é o padrão aberto que conecta o agente ao mundo externo — o banco de dados Postgres, APIs externas e sistemas legados — por uma interface única, em vez de uma integração ad hoc para cada sistema.</p>
+</blockquote>
+<p><strong>TL;DR:</strong> MCP é o padrão aberto que dá ao agente uma porta única para sistemas externos — um servidor embrulha o Postgres ou APIs externas e expõe ferramentas ao loop do agente.</p>
+<p>Até aqui, as ferramentas do agente agiam na sua máquina: <code>Read</code>, <code>Edit</code>, <code>Bash</code>, <code>Grep</code>. Mas o <code>agent-order-backend</code> precisa saber se as tabelas do banco de dados <em>de verdade</em> estão com o schema correto em produção, e o <code>agent-order-analytics</code> precisa consultar dados consolidados de pedidos. Isso é fora da máquina local. Como o agente alcança esses sistemas? Com MCP.</p>
+<h2>Primeiro, o MCP em ação</h2>
+<p>O <code>agent-order-architect</code> quer validar uma suposição: o schema da tabela de pedidos no banco de dados local ou de staging já suporta optimistic locking? Em vez de você abrir um cliente SQL e rodar queries, o agente consulta direto, por uma ferramenta MCP:</p>
+<pre><code class="language-text">[agent-order-architect]
+
+Verificando o schema da tabela de pedidos no banco de dados…
+→ mcp__postgres__describe_table(table_name: &quot;orders&quot;)
+  ← columns: [
+      { name: &quot;id&quot;, type: &quot;uuid&quot; },
+      { name: &quot;status&quot;, type: &quot;varchar&quot; },
+      { name: &quot;version&quot;, type: &quot;integer&quot; }
+    ]
+
+Confirmado: a tabela possui a coluna &quot;version&quot; necessária para a implementação do optimistic locking no service do backend.
+</code></pre>
+<p>A chamada <code>mcp__postgres__describe_table()</code> não é um arquivo local nem um comando de shell direto. É uma ferramenta exposta por um <strong>servidor MCP</strong> que embrulha a conexão ao banco Postgres. Para o agente, ela aparece como mais uma ferramenta no loop do Capítulo 02 — ele pede, o harness executa, o resultado volta para a janela de contexto. A diferença é que, por baixo, isso falou com o banco de dados por um protocolo padronizado.</p>
+<h2>O que é o MCP</h2>
+<blockquote>
+<p>O <strong>MCP (Model Context Protocol)</strong> é um padrão aberto, publicado pela Anthropic em novembro de 2024, para conectar aplicações de LLM a fontes de dados e ferramentas externas. Ele define como um <em>cliente</em> (o harness) conversa com <em>servidores</em> que expõem ferramentas, dados e prompts de forma uniforme.</p>
+</blockquote>
+<p>A analogia que a própria Anthropic usa: <strong>MCP é como uma porta USB-C para aplicações de IA.</strong> Antes do USB-C, cada aparelho tinha seu conector; integrar N ferramentas a M aplicações dava N×M integrações sob medida. Com um padrão, cada lado implementa a interface uma vez e tudo conversa. MCP faz isso para conectar agentes a sistemas: o Postgres expõe um servidor MCP uma vez, e qualquer harness compatível passa a usá-lo — sem código de integração específico.</p>
+<h3>Como funciona: cliente e servidor</h3>
+<pre><code class="language-mermaid">graph LR
+    subgraph &quot;Seu ambiente&quot;
+        H[&quot;Harness&lt;br/&gt;(cliente MCP)&quot;]
+        A[&quot;agent-order-backend&quot;]
+    end
+    subgraph &quot;Servidores MCP&quot;
+        S1[&quot;Servidor Postgres&lt;br/&gt;(embrulha o banco)&quot;]
+        S2[&quot;Servidor GitHub&lt;br/&gt;(embrulha a API)&quot;]
+    end
+    A --&gt; H
+    H &lt;--&gt;|protocolo MCP| S1
+    H &lt;--&gt;|protocolo MCP| S2
+    S1 --&gt; DB[&quot;Banco Postgres (orders)&quot;]
+    S2 --&gt; API[&quot;API GitHub (PRs)&quot;]
+</code></pre>
+<ul>
+<li><strong>Cliente MCP</strong>: o harness (Claude Code). Ele descobre quais ferramentas cada servidor oferece e as apresenta ao modelo.</li>
+<li><strong>Servidor MCP</strong>: um processo que expõe capacidades por três tipos de primitiva:<ul>
+<li><strong>Tools</strong> — ações que o modelo pode chamar (ex.: <code>run_query</code>, <code>describe_table</code>). É o que mais usamos.</li>
+<li><strong>Resources</strong> — dados que o servidor disponibiliza para leitura (ex.: logs ou schemas de banco).</li>
+<li><strong>Prompts</strong> — modelos de prompt reutilizáveis que o servidor sugere.</li>
+</ul>
+</li>
+<li><strong>Transporte</strong>: cliente e servidor falam por <code>stdio</code> (processo local) ou HTTP (servidor remoto). O protocolo é o mesmo; muda só o canal.</li>
+</ul>
+<h3>Como você conecta um servidor</h3>
+<p>A configuração vive num arquivo (<code>.mcp.json</code>), e o plugin do Capítulo 07 pode trazê-la pronta:</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;postgres&quot;: {
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [&quot;-y&quot;, &quot;@modelcontextprotocol/server-postgres&quot;],
+      &quot;env&quot;: { &quot;PG_CONNECTION_STRING&quot;: &quot;${PG_CONNECTION_STRING}&quot; }
+    }
+  }
+}
+</code></pre>
+<p>Conectado o servidor, suas ferramentas aparecem para o agente com o prefixo <code>mcp__&lt;servidor&gt;__&lt;ferramenta&gt;</code> — foi de onde veio o <code>mcp__postgres__describe_table</code> do exemplo. Do ponto de vista do agente, são apenas mais ferramentas no loop.</p>
+<h2>Como isso se conecta ao <code>agent</code></h2>
+<p>A relação amarra de volta ao Capítulo 02 (ferramentas) e ao Capítulo 03 (o campo <code>tools</code>):</p>
+<blockquote>
+<p><strong>MCP estende o conjunto de ferramentas do agent para além da máquina local. O que <code>Read</code> e <code>Bash</code> são para arquivos e shell, as ferramentas MCP são para sistemas externos.</strong></p>
+</blockquote>
+<ol>
+<li><strong>As ferramentas MCP entram no loop como qualquer outra.</strong> O agente não sabe (nem precisa saber) que <code>mcp__postgres__run_query</code> fala com um servidor remoto. Para ele, é uma ferramenta — pensar → chamar → observar, igual ao Capítulo 02.</li>
+<li><strong>O <code>tools</code> do agent controla o acesso.</strong> Você pode dar ao <code>agent-order-analytics</code> acesso ao servidor MCP do Postgres (leitura), mas negar a ele ferramentas de alteração. O princípio do menor privilégio do Capítulo 03 vale também — e principalmente — para ferramentas que tocam sistemas reais.</li>
+<li><strong>O plugin distribui a conexão.</strong> A squad <code>order</code> empacotada (Capítulo 07) já vem com o <code>.mcp.json</code> do database inspector. Quem instala o plugin ganha o agente <em>e</em> a porta para o banco de dados que ele precisa.</li>
+</ol>
+<h3>MCP vs CLI: Raciocinando sobre Performance e Economia de Tokens</h3>
+<p>Uma dúvida frequente é se devemos expor uma capacidade local como um <strong>servidor MCP</strong> ou como uma ferramenta <strong>CLI nativa</strong> executada via shell (<code>Bash</code>).</p>
+<p>Aqui reside uma regra de ouro de performance e token economy: <strong>Use o CLI local para operações locais de desenvolvimento (compilar, rodar testes, lint).</strong></p>
+<ul>
+<li><strong>Explosão de contexto e latência:</strong> Embrulhar um compilador (como o <code>tsc</code>) em um servidor MCP adiciona camadas de serialização JSON, latência de IPC local, e inunda a janela de contexto com o overhead do protocolo de metadados do MCP.</li>
+<li><strong>Superioridade do CLI:</strong> Deixar o agente rodar os testes e linters diretamente via terminal/shell (<code>tools: Bash</code>) aproveita o processo do OS nativo. É infinitamente mais rápido, consome menos recursos, e preserva a janela de contexto mantendo apenas a saída essencial.</li>
+<li><strong>Quando usar o MCP:</strong> O MCP brilha na conexão de sistemas <strong>externos</strong> (como APIs de terceiros, painéis SaaS, bancos de dados corporativos) que não possuem uma interface CLI local acessível de forma trivial ou segura.</li>
+</ul>
+<p>A frase de bolso: <em>O CLI é para as ferramentas do próprio desenvolvedor no ambiente de trabalho local; o MCP é a porta USB-C para o ecossistema externo.</em></p>
+<p>Em uma frase: <strong>MCP é como o agent deixa de raciocinar só sobre o seu código e passa a agir sobre o seu negócio.</strong></p>
+<h2>Trade-offs e armadilhas</h2>
+<ul>
+<li><strong>Conectar um servidor MCP é conceder acesso.</strong> Um servidor com credenciais de escrita no banco de produção pode apagar dados. Trate credenciais de MCP como você trata qualquer segredo de produção: menor privilégio, escopo restrito, rotação.</li>
+<li><strong>Injeção de prompt via resultado de ferramenta.</strong> O texto que um servidor MCP devolve entra na janela de contexto e o modelo pode segui-lo como instrução. Um servidor comprometido (ou um dado malicioso no banco) pode tentar &quot;instruir&quot; o agente. Não confie cegamente no que volta de uma ferramenta externa.</li>
+<li><strong>Latência e disponibilidade.</strong> Cada chamada MCP é uma ida à rede ou a outro processo. Servidor lento ou fora do ar trava o loop do agente. Considere timeouts e fallback.</li>
+<li><strong>Confiança no servidor.</strong> Use servidores MCP oficiais ou auditados. Um servidor de terceiro roda no seu ambiente e vê o que você passa a ele.</li>
+</ul>
+<h3>Como saber se você entendeu</h3>
+<p>Você dominou este capítulo se consegue:</p>
+<ul>
+<li>explicar a relação cliente (harness) ↔ servidor MCP;</li>
+<li>justificar a diferença entre usar uma ferramenta CLI local vs. um servidor MCP;</li>
+<li>citar dois riscos de segurança de conectar um servidor MCP.</li>
+</ul>
+<h2>Fontes</h2>
+<ul>
+<li>Model Context Protocol — servidores de referência (implementações oficiais open source): <a href="https://github.com/modelcontextprotocol/servers">https://github.com/modelcontextprotocol/servers</a></li>
+<li>Anthropic — anúncio do MCP (novembro de 2024): <a href="https://www.anthropic.com/news/model-context-protocol">https://www.anthropic.com/news/model-context-protocol</a></li>
+<li>Especificação e documentação do MCP (padrão aberto): <a href="https://modelcontextprotocol.io">https://modelcontextprotocol.io</a></li>
+<li>Claude Code — MCP (configurar servidores, <code>.mcp.json</code>): <a href="https://code.claude.com/docs/en/mcp">https://code.claude.com/docs/en/mcp</a></li>
+</ul>
+<h2>Síntese</h2>
+<p>MCP é o padrão aberto que dá ao agente uma porta única para o mundo externo: em vez de uma integração sob medida para cada sistema, um servidor MCP embrulha o Postgres ou APIs externas e expõe ferramentas que entram no loop do agente como qualquer outra. É o que transforma um agente que conhece o seu código num agente que opera o seu banco de dados — com todo o cuidado de segurança que essa ponte exige.</p>
+<p>Temos agora todas as camadas conceituais. Falta o lugar concreto onde você opera tudo isso, no dia a dia, no terminal.</p>
+<p>Próximo: <a href="09-cli.md">Capítulo 09 — O CLI</a>.</p>
+</section>
+
+<section id="capitulo-09-cli" class="ebook-section"><h1>Capítulo 09 — O CLI</h1>
+<blockquote>
+<p>O CLI é onde você opera todas as camadas anteriores: o terminal como cabine de comando do harness. É onde o agente encontra o seu ambiente real — arquivos, git, shell, testes.</p>
+</blockquote>
+<p><strong>TL;DR:</strong> O CLI é a cabine onde você opera todas as camadas — aciona agents, troca de modelo, instala plugins, conecta MCP — e, em modo headless, vira etapa de pipeline.</p>
+<p>Falamos de LLM, harness, agent, subagent, context, skill, plugin e MCP como conceitos. Mas em que lugar concreto você <em>roda</em> tudo isso? Para a maioria dos desenvolvedores, a resposta é a linha de comando. O Claude Code é, na sua forma pri## Primeiro, o CLI em ação</p>
+<p>Você abre o terminal no repositório do e-commerce e digita:</p>
+<pre><code class="language-bash">$ claude
+</code></pre>
+<p>A sessão começa, e tudo dos capítulos anteriores acontece aqui:</p>
+<pre><code class="language-text">&gt; Criar sistema robusto de CRUD de Pedidos. Quero a arquitetura antes do código.
+
+• Acionando agent-order-architect (model: opus)        ← agent + LLM
+• Read(src/orders/OrderService.ts)                       ← harness + tools
+• mcp__postgres__describe_table() → [orders, events]     ← MCP
+• Carregando skill improve-codebase-architecture         ← skill
+• [hook PreToolUse: validar-concorrencia.sh] ok          ← plugin/hook
+
+Decisões de arquitetura: [...]
+</code></pre>
+<p>Cada linha dessa sessão é uma camada deste e-book em operação — e o CLI é o lugar onde elas se encontram. O terminal não é um detalhe de interface: é onde o agente toca o seu ambiente de desenvolvimento de verdade.</p>
+<h2>O que é o CLI</h2>
+<blockquote>
+<p>Um <strong>CLI</strong> (<em>Command-Line Interface</em>, interface de linha de comando) é um programa operado por texto no terminal. No nosso contexto, o Claude Code é um CLI: o ponto de entrada pelo qual você inicia uma sessão, conversa com o agente e o deixa agir sobre o seu projeto.</p>
+</blockquote>
+<p>O Claude Code também existe em outras formas — extensão de IDE (VS Code, JetBrains), app de desktop e web. Mas o CLI é a forma canônica, e por um bom motivo: é onde o desenvolvimento de verdade já acontece. O agente que vive no terminal está a um <code>Bash</code> de distância dos seus testes, do seu <code>git</code>, do seu build.</p>
+<h3>Por que o terminal importa</h3>
+<p>O CLI dá ao harness acesso direto ao ambiente onde você trabalha:</p>
+<ul>
+<li><strong>Sistema de arquivos</strong>: ler e editar o código no lugar, sem upload.</li>
+<li><strong>Shell</strong>: rodar testes, build, linters, <code>git</code> — as ferramentas <code>Bash</code> do Capítulo 02 operam no seu shell real.</li>
+<li><strong>Composição Unix</strong>: a saída do agente pode ser canalizada (<code>|</code>) para outras ferramentas, e ele pode consumir a saída delas.</li>
+<li><strong>Versionamento</strong>: como agents, skills e plugins são arquivos, eles entram no <code>git</code> junto com o código — revisados em pull request como qualquer mudança.</li>
+</ul>
+<h3>Comandos Customizados (Slash Commands)</h3>
+<p>O CLI permite a você interagir de forma imediata via <strong>Slash Commands</strong> (como <code>/goal</code>, <code>/schedule</code>, <code>/grill-me</code>). Mais do que usar os comandos padrão, você pode <strong>customizar e estender</strong> a cabine de comando criando novos atalhos no repositório.
+Esses comandos são definidos salvando arquivos Markdown em <code>.claude/commands/&lt;nome-do-comando&gt;.md</code>. Quando digitados, eles forçam uma instrução específica ou script determinístico diretamente na sessão, pulando o loop cognitivo do assistente geral.</p>
+<h3>Git Worktrees: Isolamento Total para Operações Agênticas</h3>
+<p>Uma das melhores práticas avançadas ao operar agentes no terminal é o uso de <strong>Git Worktrees</strong>.
+Muitas vezes, uma tarefa agêntica longa (como um <code>/goal</code> para reescrever um CRUD inteiro) pode durar minutos e travar o seu repositório local, impedindo você de trabalhar em outros arquivos ou ramos paralelos.</p>
+<ul>
+<li><strong>Como funciona:</strong> O Git Worktree permite que você crie um diretório físico totalmente separado no disco, mas conectado ao mesmo repositório git (<code>git worktree add ../orders-refactor feat/orders-refactor</code>).</li>
+<li><strong>Vantagem para Agentes:</strong> Você pode inicializar a sessão do CLI do agente apontando para esse worktree isolado. O agente pode fazer alterações profundas, rodar scripts agressivos de compilação, quebrar códigos intermediários e testar em background, enquanto o seu diretório de trabalho principal (<code>main</code> ou <code>develop</code>) continua limpo e disponível para seu fluxo de trabalho pessoal.</li>
+</ul>
+<h2>O CLI como cabine das camadas anteriores</h2>
+<p>O que você aprendeu nos capítulos anteriores aparece, no CLI, como controles concretos:</p>
+<table>
+<thead>
+<tr>
+<th>Camada</th>
+<th>Como aparece no CLI</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>LLM</strong> (Cap. 01)</td>
+<td><code>/model</code> troca o cérebro da sessão (opus/sonnet/haiku) — model routing na prática.</td>
+</tr>
+<tr>
+<td><strong>Harness</strong> (Cap. 02)</td>
+<td>É o próprio Claude Code rodando o loop; modos de permissão controlam o que ele executa.</td>
+</tr>
+<tr>
+<td><strong>Agent</strong> (Cap. 03)</td>
+<td>Acionado automaticamente pelo <code>description</code>, ou invocado quando você descreve a tarefa.</td>
+</tr>
+<tr>
+<td><strong>Subagent</strong> (Cap. 04)</td>
+<td>O orquestrador delega dentro da mesma sessão; você vê cada subagent reportar.</td>
+</tr>
+<tr>
+<td><strong>Context</strong> (Cap. 05)</td>
+<td><code>CLAUDE.md</code> é carregado a cada sessão; a compactação acontece quando a conversa cresce.</td>
+</tr>
+<tr>
+<td><strong>Skill</strong> (Cap. 06)</td>
+<td>Carregada sob demanda; comandos <code>/</code> vêm de skills e plugins.</td>
+</tr>
+<tr>
+<td><strong>Plugin</strong> (Cap. 07)</td>
+<td><code>/plugin install</code> adiciona agents, skills, hooks e comandos à sua sessão.</td>
+</tr>
+<tr>
+<td><strong>MCP</strong> (Cap. 08)</td>
+<td>Servidores do <code>.mcp.json</code> sobem com a sessão; suas ferramentas viram <code>mcp__…</code>.</td>
+</tr>
+</tbody></table>
+<p>O CLI é o denominador comum: o lugar onde todas essas peças, definidas em arquivos, ganham vida em uma conversa.</p>
+<h3>Modo headless: o CLI sem você na frente</h3>
+<p>Há um recurso do CLI que destrava automação séria — o <strong>modo headless</strong> (não interativo). Em vez de uma conversa, você passa o pedido como argumento e captura a saída:</p>
+<pre><code class="language-bash">$ claude -p &quot;Rode os testes de orders e resuma as falhas&quot; &gt; relatorio.txt
+</code></pre>
+<p>Isso transforma o agente em um passo de pipeline. Você pode chamá-lo de um script, de um hook de <code>git</code>, de um job de CI — o mesmo agente que você usa interativamente, agora dentro de uma automação. É a ponte entre &quot;assistente que eu converso&quot; e &quot;etapa programável do meu fluxo&quot;.</p>
+<h2>Como isso se conecta ao <code>agent</code></h2>
+<p>O fechamento do arco:</p>
+<blockquote>
+<p><strong>O CLI é a cabine onde você invoca e opera o agent. Se o agent é o especialista e o harness é o motor, o CLI é o painel de controle.</strong></p>
+</blockquote>
+<ol>
+<li><strong>É onde o agent é acionado.</strong> Você descreve a tarefa no terminal; o harness casa com o <code>description</code> e aciona o <code>agent-order-architect</code>. O ciclo inteiro dos capítulos anteriores começa com você digitando no CLI.</li>
+<li><strong>É onde você ajusta a configuração ao vivo.</strong> <code>/model opus</code> antes de uma decisão difícil; <code>/plugin install order-squad</code> para trazer a squad; conectar um servidor MCP. O CLI é onde as decisões dos capítulos 01–08 viram comandos.</li>
+<li><strong>É onde o agent vira automação.</strong> Em modo headless, o mesmo <code>agent-order-architect</code> pode rodar num CI a cada PR, revisando a arquitetura automaticamente. O agente sai do terminal interativo e entra no pipeline.</li>
+</ol>
+<p>Em uma frase: <strong>o CLI é onde o e-book inteiro deixa de ser teoria e vira o seu fluxo de trabalho.</strong></p>
+<h2>Trade-offs e armadilhas</h2>
+<ul>
+<li><strong>Poder no terminal exige permissões sérias.</strong> Um agente com <code>Bash</code> no seu shell pode fazer estrago. Use os modos de permissão; não rode tudo em &quot;aceitar tudo&quot; por preguiça.</li>
+<li><strong>Headless remove o humano do loop.</strong> Automação é ótima até o agente fazer a coisa errada sem ninguém olhando. Em CI, restrinja ferramentas e dê escopo apertado — o menor privilégio do Capítulo 03 vale dobrado sem supervisão.</li>
+<li><strong>CLI tem curva.</strong> Para quem vive em GUI, o terminal assusta no começo. Mas é justamente a integração com shell/git/arquivos que dá ao agente o acesso que o torna útil.</li>
+<li><strong>Saída para pipeline precisa ser estável.</strong> Em scripts, prefira formatos previsíveis e trate o agente como um comando que pode falhar — com timeout e verificação do resultado.</li>
+</ul>
+<h3>Como saber se você entendeu</h3>
+<p>Você dominou este capítulo se consegue:</p>
+<ul>
+<li>mapear pelo menos quatro camadas anteriores aos controles do CLI;</li>
+<li>explicar o que o modo headless habilita e quais riscos ele traz;</li>
+<li>descrever como os Git Worktrees auxiliam no isolamento de sessões agênticas longas.</li>
+</ul>
+<h2>Fontes</h2>
+<ul>
+<li>Anthropic — anthropic-sdk-typescript, o SDK oficial para automações e integrações TypeScript/JS: <a href="https://github.com/anthropics/anthropic-sdk-typescript">https://github.com/anthropics/anthropic-sdk-typescript</a></li>
+<li>Claude Code — referência do CLI (comandos, flags, modo headless): <a href="https://code.claude.com/docs/en/cli-reference">https://code.claude.com/docs/en/cli-reference</a></li>
+<li>Claude Code — visão geral (formas: CLI, IDE, desktop, web): <a href="https://code.claude.com/docs/pt/overview">https://code.claude.com/docs/pt/overview</a></li>
+<li>Claude Code — Git Worktrees: <a href="https://code.claude.com/docs/pt/worktrees">https://code.claude.com/docs/pt/worktrees</a></li>
+</ul>
+<h2>Síntese</h2>
+<p>O CLI é onde tudo se encontra: o terminal como cabine de comando do harness, com acesso direto aos arquivos, ao shell, ao git e aos testes do seu projeto. É lá que você aciona agents, troca de modelo, instala plugins, conecta MCP — e, em modo headless, transforma o agente em uma etapa do seu pipeline. As camadas anteriores são definições em arquivos; o CLI é onde elas viram trabalho feito.</p>
+<p>Temos o stack inteiro. No último capítulo, montamos tudo de uma vez e seguimos a tarefa de CRUD de Pedidos da primeira à última camada, sem cortes.</p>
+<p>Próximo: <a href="10-sintese.md">Capítulo 10 — Síntese</a>.</p>
+</section>
+
+<section id="capitulo-10-sintese" class="ebook-section"><h1>Capítulo 10 — Síntese</h1>
+<blockquote>
+<p>Nove camadas, um ecossistema. Aqui consolidamos todo o stack sob uma tarefa de CRUD de Pedidos real, rastreando o fluxo do primeiro token ao deploy, e mapeando as ferramentas que definem o estado da arte do desenvolvimento agêntico.</p>
+</blockquote>
+<p><strong>TL;DR:</strong> O stack completo opera de forma coesa para entregar um CRUD de Pedidos com isolamento via Git Worktrees, otimização de tokens com proxies locais (como RTK/Caveman), automações com Slash Commands e Skills recursivas, e feedbacks de ambiente em tempo real com Hooks e notificações do OS.</p>
+<p>Você começou este e-book com uma lista desordenada de termos: LLM, harness, agent, subagent, context, skill, plugin, MCP, CLI. O objetivo deste trabalho foi transformar esse vocabulário solto em um sistema arquitetural estável: peças interdependentes onde cada camada resolve exatamente o gargalo que a camada anterior não consegue cobrir. </p>
+<h2>O stack em uma visão sistêmica</h2>
+<pre><code class="language-mermaid">graph TD
+    CLI[&quot;CLI — Cabine de Comando (Operação local &amp; Shell)&quot;]
+    HARNESS[&quot;Harness — Loop, Processos, Permissões &amp; Hooks&quot;]
+    LLM[&quot;LLM — Cérebro (Opus/Sonnet/Haiku - Model Routing)&quot;]
+    AGENT[&quot;Agent — Especialista (Instruções e Regras em Markdown)&quot;]
+    SUB[&quot;Subagents — Squad de Especialistas em Sandbox&quot;]
+    CTX[&quot;Context — Engenharia de Contexto (CLAUDE.md &amp; RAM)&quot;]
+    SKILL[&quot;Skills — Comportamentos declarativos sob demanda&quot;]
+    MCP[&quot;MCP — Portas externas estáveis (Bancos, APIs)&quot;]
+    PLUGIN[&quot;Plugin — Pacote de distribuição de Agents, Skills &amp; Hooks&quot;]
+
+    CLI --&gt; HARNESS
+    HARNESS --&gt; LLM
+    HARNESS --&gt; AGENT
+    AGENT --&gt; SUB
+    CTX -.alimenta.-&gt; AGENT
+    SKILL -.estende.-&gt; AGENT
+    MCP -.conecta.-&gt; HARNESS
+    PLUGIN -.empacota.-&gt; AGENT
+    PLUGIN -.empacota.-&gt; SKILL
+    PLUGIN -.empacota.-&gt; MCP
+</code></pre>
+<p>Analisando a topologia do fluxo de execução:</p>
+<ul>
+<li><strong>Fluxo Descendente (Comando)</strong>: Você digita no <strong>CLI</strong>, que aciona o <strong>harness</strong> local. O harness inicializa a sessão carregando o <strong>context</strong> otimizado, interpretando os <strong>plugins</strong> instalados, estendendo capacidades através de <strong>skills</strong> e abrindo conexões <strong>MCP</strong> declaradas. O harness então invoca o <strong>agent</strong> correto, que gerencia e delega tarefas complexas a <strong>subagents</strong> especializados, orquestrando as chamadas de inferência no <strong>LLM</strong> adequado.</li>
+<li><strong>Fluxo Ascendente (Execução)</strong>: O <strong>LLM</strong> gera a decisão lógica que o <strong>harness</strong> intercepta, valida com <strong>hooks</strong> determinísticos locais e executa no ambiente nativo do seu repositório via <strong>CLI</strong>, garantindo segurança e controle.</li>
+</ul>
+<hr>
+<h2>O CRUD de Pedidos pelo fluxo agêntico</h2>
+<p>Vamos traçar a jornada de ponta a ponta para implementar um <strong>CRUD de Pedidos (Orders)</strong> robusto — completo com tratamento de concorrência por optimistic locking e histórico de transições de estados — mapeando exatamente onde e por que cada camada entra em ação.</p>
+<h3>1. Preparando a cabine com Git Worktrees no CLI</h3>
+<p>Antes de iniciar a sessão com o agente, você quer evitar que arquivos temporários, builds inacabados ou testes quebrados interrompam seu trabalho paralelo no ramo principal. Você inicializa um <strong>Git Worktree</strong> dedicado para a tarefa:</p>
+<pre><code class="language-bash">$ git worktree add ../orders-sandbox feat/orders-crud
+$ cd ../orders-sandbox
+$ claude
+</code></pre>
+<p>O <strong>CLI</strong> do Claude Code é inicializado nesse diretório limpo e isolado. O CLI apresenta uma vantagem técnica gritante em relação a interfaces web ou extensões genéricas de IDE: <strong>o CLI atua diretamente no host, acessando processos de shell nativos</strong>. Isso significa que ferramentas de linters (<code>eslint</code>), testes unitários (<code>jest</code>/<code>vitest</code>), compiladores (<code>tsc</code>) e comandos de versionamento (<code>git</code>) rodam sem o overhead de serialização, rede ou latência inerentes aos protocolos de rede. É a superioridade de performance e tokens do CLI em ação: chamadas diretas de shell local poupam milhares de tokens que seriam desperdiçados descrevendo o estado do sistema de arquivos pela API.</p>
+<pre><code class="language-text">&gt; /goal Implementar o CRUD de Pedidos com controle de concorrência e fila de eventos.
+</code></pre>
+<h3>2. O Harness e a Curadoria de Contexto</h3>
+<p>Ao ler a instrução, o <strong>harness</strong> é ativado. Ele carrega as diretrizes do arquivo <a href="../../../../../CLAUDE.md">CLAUDE.md</a> e do indexador de instruções <a href="../../../../../AGENTS.md">AGENTS.md</a> do projeto.</p>
+<p>A engenharia de contexto atua aqui como uma memória RAM limpa. Em vez de enviar toda a árvore de arquivos ao LLM, o harness usa indexação seletiva. O sinal-sobre-ruído é mantido alto: apenas a convenção de nomenclatura de TypeScript, o padrão de design do repositório e os schemas SQL relevantes das tabelas <code>orders</code> e <code>order_events</code> são puxados para a janela ativa.</p>
+<h3>3. O Agent Especialista e a Squad de Subagents</h3>
+<p>O harness avalia as descrições dos agentes disponíveis e aciona o especialista <code>agent-order-architect</code>. Roteado automaticamente para rodar no Claude 3.5 Sonnet ou no Claude 3 Opus (devido à complexidade do desenho de concorrência), o arquiteto analisa a tarefa e percebe que codificar, testar e documentar tudo de uma vez estourará o limite cognitivo de uma única sessão.</p>
+<p>Ele decide criar uma <strong>squad de subagents</strong> isolados em sandboxes dedicadas:</p>
+<ol>
+<li><strong><code>product-manager</code></strong>: Analisa as regras de negócio para as transições de estado (<code>draft</code> -&gt; <code>created</code> -&gt; <code>pending_payment</code> -&gt; <code>paid</code> -&gt; <code>cancelled</code>) e gera os critérios de aceitação.</li>
+<li><strong><code>backend-coder</code></strong>: Escreve o serviço em TypeScript (<code>OrderService.ts</code>), aplicando concorrência otimista com verificação de versão da linha (<code>version</code> + 1) e persistência das transições na tabela <code>order_events</code>.</li>
+<li><strong><code>qa-tester</code></strong>: Gera testes automatizados de integração concorrente simulando requisições paralelas para garantir que nenhuma transição de estado seja sobrescrita indevidamente.</li>
+</ol>
+<p>Cada subagent trabalha com ferramentas limitadas (princípio do menor privilégio) e relata apenas o resultado compilado ao orquestrador, mantendo o contexto principal limpo.</p>
+<h3>4. Custom Slash Commands vs. Skills no Loop</h3>
+<p>Durante a implementação, o desenvolvedor pode interagir com a sessão usando atalhos rápidos. É crucial entender a diferença de finalidade de cada um:</p>
+<ul>
+<li><strong>Slash Commands (Comandos Customizados)</strong>: São atalhos de automação focados no fluxo do usuário (salvos em <code>.claude/commands/&lt;nome&gt;.md</code>, como <code>/goal</code> ou <code>/grill-me</code>). Eles forçam um comportamento determinístico de controle de sessão ou injetam prompts estruturados de forma imediata na pilha de execução.</li>
+<li><strong>Skills (Conhecimento Comportamental)</strong>: São arquivos de habilidades declarativas salvas em <code>.claude/skills/&lt;nome&gt;/SKILL.md</code> que o agente carrega de forma dinâmica somente se identificar que a tarefa atual necessita daquela habilidade.</li>
+</ul>
+<p>Para garantir a qualidade, o agente carrega a skill recursiva de auto-melhoria <code>skill-recursiva-feedback-loop-harness</code>. Esta skill executa um ciclo autônomo (EFL - Error Fix Loop): compila o código TypeScript com <code>npx tsc --noEmit</code>, roda os testes com <code>npm run test</code> e, se encontrar falhas, lê as mensagens de erro, ajusta o código e repete o ciclo recursivamente até que a execução esteja livre de erros e em total conformidade técnica.</p>
+<blockquote>
+<p>[!WARNING]
+<strong>Aviso Crítico de Economia</strong>: Sempre teste a execução básica do seu código <em>sem skills</em> ativas primeiro. Carregar múltiplas skills pesadas de forma contínua em tarefas simples gera uma explosão de tokens desnecessária, consumindo rapidamente a cota de processamento. Use skills complexas apenas quando a automação de correção de falhas for estritamente necessária.</p>
+</blockquote>
+<h3>5. Gateways Externos via MCP</h3>
+<p>Para persistir os dados e disparar notificações reais para sistemas de terceiros, o harness se conecta a servidores locais e remotos usando o <strong>Model Context Protocol (MCP)</strong>.</p>
+<ul>
+<li>O agente utiliza a ferramenta do MCP de banco de dados (<code>mcp__postgres__query</code>) para inspecionar os índices das tabelas e garantir que o campo <code>order_id</code> na tabela <code>order_events</code> possui a indexação correta para buscas de auditoria rápidas.</li>
+<li>O agente utiliza o MCP de mensageria para validar a fila de transição de status no sistema de mensagens externas.</li>
+</ul>
+<p>O MCP atua como uma interface padronizada estável para o agente acessar o mundo externo sem precisar codificar conexões brutas em nível de soquete em cada execução.</p>
+<h3>6. Hooks e Notificações de Ambiente</h3>
+<p>Antes de consolidar as alterações, o harness aciona os <strong>Hooks</strong> de pré-execução declarados no manifesto do plugin do projeto:</p>
+<ul>
+<li>O hook <code>PreToolUse</code> executa um script bash local (<code>validar-typescript.sh</code>) para assegurar que nenhum tipo <code>any</code> implícito foi adicionado no serviço de pedidos.</li>
+<li>Quando o <code>/goal</code> longo de reestruturação é concluído com sucesso e a branch do Git Worktree está pronta, o hook de finalização de tarefa dispara uma notificação física para o desenvolvedor: um aviso sonoro no terminal (beep) e um pop-up visual no sistema operacional. Isso evita que você precise policiar o terminal em tarefas demoradas, permitindo que você retorne à cabine assim que o trabalho agêntico for finalizado.</li>
+</ul>
+<pre><code class="language-bash"># Exemplo de script de notificação física acionado por Hook pós-sucesso
+osascript -e &#39;display notification &quot;CRUD de Pedidos implementado e testado com sucesso no Git Worktree!&quot; with title &quot;Claude Code&quot;&#39;
+echo -e &quot;\a&quot; # Emite um sinal sonoro (beep) no terminal host
+</code></pre>
+<hr>
+<h2>O Ecossistema da Comunidade e a Economia de Tokens</h2>
+<p>O desenvolvimento AI-native moderno não se limita às ferramentas oficiais da Anthropic. Existe uma comunidade vibrante que cria ferramentas fundamentais para otimização de custos, gerenciamento de memória e indexação de bases de código:</p>
+<ol>
+<li><strong>Economia de Tokens e Proxy de Linha de Comando</strong>:<ul>
+<li><strong>RTK (Rust Token Killer)</strong> (<code>github.com/rtk-ai/rtk</code>): Um proxy otimizado escrito em Rust que intercepta e comprime logs de terminal, outputs de linters e testes gigantescos antes de enviá-los ao LLM, gerando economias drásticas de 60% a 90% em operações diárias de desenvolvimento.</li>
+<li><strong>Caveman</strong> (<code>github.com/JuliusBrussee/caveman</code>): Uma alternativa focada no controle rígido de consumo de tokens em ambientes CLI locais.</li>
+</ul>
+</li>
+<li><strong>Repositórios de Skills e Plugins</strong>:<ul>
+<li><strong>aitmpl.com/skills/</strong> e <strong>skills.sh</strong>: Marketplaces públicos e repositórios comunitários para descobrir, compartilhar e baixar skills prontas de auditoria, refatoração de código, testes e deploys.</li>
+<li><strong>context-7</strong> (<a href="https://context7.com">context7.com</a>): Plataforma de documentação em tempo real que alimenta agentes (como Cursor e Claude Code) com referências atualizadas e exemplos práticos via CLI (<code>npx ctx7 setup</code>) ou servidores MCP para evitar alucinações de APIs obsoletas.</li>
+<li><strong>frontend-design</strong> (<a href="https://github.com/anthropic/frontend-design-skill">github.com/anthropic/frontend-design-skill</a>): Skill oficial de curadoria visual da Anthropic, direcionando o LLM a adotar estéticas profissionais premium, banir clichês (&quot;AI slop&quot;) e fontes padrão de navegador.</li>
+<li><strong>ui-ux-pro-max</strong> (<a href="https://github.com/nextlevelbuilder/ui-ux-pro-max-skill">github.com/nextlevelbuilder/ui-ux-pro-max-skill</a>): Base de conhecimento e gerador inteligente de sistemas de design, cobrindo mais de 50 estilos visuais, paletas curadas e guias de acessibilidade para Next.js, React e SwiftUI.</li>
+</ul>
+</li>
+<li><strong>Gerenciamento de Memória Persistente</strong>:<ul>
+<li><strong>claude-mem</strong> (<code>github.com/thedotmack/claude-mem</code>): Um utilitário de persistência de memória a longo prazo para o Claude Code que estende as capacidades nativas do agente de recordar preferências, padrões de arquitetura e decisões de sessões passadas entre reinicializações de máquina.</li>
+</ul>
+</li>
+<li><strong>Indexação com Grafos de Dependência</strong>:<ul>
+<li><strong>lemon-code-graph</strong> (<code>github.com/Andersonlimahw/lemon-code-graph</code>): Ferramenta que gera grafos de chamadas e mapeamentos de arquivos no repositório local, otimizando o envio de dependências cruzadas para a janela de contexto do agente.</li>
+<li><strong>Open Graph</strong> (<code>github.com/colbymchenry/codegraph</code>): Analisador de grafos de código para contextualização agêntica aprofundada.</li>
+</ul>
+</li>
+<li><strong>LLM-Wiki de Karpathy</strong>:<ul>
+<li>O guia definitivo e minimalista de referência de arquitetura mental de LLMs mantido por Andrej Karpathy: <a href="https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f">LLM-Wiki Gist</a>.</li>
+</ul>
+</li>
+</ol>
+<h3>Ferramentas e CLIs Equivalentes ao Claude Code</h3>
+<p>Para além do Claude Code, o cenário de desenvolvimento AI-native conta com diversas alternativas e proxies equivalentes focados em comandos via terminal e automação nativa:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Empresa</th>
+<th align="left">CLI / Ferramenta</th>
+<th align="left">Link</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Anthropic</strong></td>
+<td align="left">Claude Code</td>
+<td align="left"><a href="https://code.claude.com">code.claude.com</a></td>
+</tr>
+<tr>
+<td align="left"><strong>Google DeepMind</strong></td>
+<td align="left">Antigravity CLI</td>
+<td align="left"><a href="https://deepmind.google">deepmind.google/antigravity</a></td>
+</tr>
+<tr>
+<td align="left"><strong>Google</strong></td>
+<td align="left">Gemini CLI</td>
+<td align="left"><a href="https://ai.google.dev">ai.google.dev/gemini-api</a></td>
+</tr>
+<tr>
+<td align="left"><strong>OpenAI / Codex</strong></td>
+<td align="left">Codex CLI</td>
+<td align="left"><a href="https://openai.com/blog/openai-codex">openai.com/blog/openai-codex</a></td>
+</tr>
+<tr>
+<td align="left"><strong>OpenCode</strong></td>
+<td align="left">OpenCode CLI</td>
+<td align="left"><a href="https://opencode.dev">opencode.dev</a></td>
+</tr>
+<tr>
+<td align="left"><strong>Anysphere</strong></td>
+<td align="left">Cursor CLI</td>
+<td align="left"><a href="https://cursor.com">cursor.com</a></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Síntese Prática: O Modelo Mental Cristalizado</h2>
+<p>Se você precisar reter apenas a essência deste e-book para guiar seu fluxo de trabalho amanhã:</p>
+<blockquote>
+<p><strong>LLM</strong> é o cérebro. <strong>Harness</strong> é o corpo físico e executor. <strong>Agent</strong> é o especialista contextualizado por arquivos markdown. <strong>Subagents</strong> representam a squad operando em sandbox. <strong>Context</strong> é a memória de trabalho (RAM) limpa e curada. <strong>Skills</strong> são as competências declarativas que o agente aprende sob demanda. <strong>MCP</strong> representa os canais e pontes estáveis para o mundo externo. <strong>Plugins</strong> são os pacotes de distribuição e compartilhamento desse ecossistema. E o <strong>CLI</strong> é a sua cabine de controle direto no host.</p>
+</blockquote>
+<hr>
+<h2>Por onde começar amanhã</h2>
+<p>Teoria sem aplicação prática é rapidamente esquecida. Comece a transformar seu fluxo de trabalho em AI-native seguindo estes passos incrementais:</p>
+<ol>
+<li><strong>Crie seu primeiro Agent customizado</strong>: Mapeie uma tarefa puramente sua (ex: criar changelogs com base em commits do git ou rodar migrations de banco) e escreva um arquivo <code>.claude/agents/changelog-builder.md</code> com <code>name</code>, <code>description</code> e regras estritas de atuação.</li>
+<li><strong>Defina um Custom Command</strong>: Crie uma automação em <code>.claude/commands/deploy-check.md</code> para rodar linters, testar tipos e gerar um relatório unificado de saúde do código antes de commits importantes.</li>
+<li><strong>Monitore e Economize</strong>: Adicione o proxy <code>rtk</code> na frente do seu terminal e monitore os ganhos de tokens diários ao rodar sessões repetidas.</li>
+<li><strong>Utilize Git Worktrees</strong>: Nunca mais trave sua branch principal com sessões longas de agentes <code>/goal</code>. Crie um diretório temporário conectado ao git e deixe o agente trabalhar isoladamente enquanto você continua desenvolvendo em paralelo.</li>
+</ol>
+<p>O stack está montado e ao seu alcance. A cabine de comando do terminal está aberta. É hora de projetar e operar com a sua própria squad de engenharia agêntica.</p>
+<hr>
+<h2>Fontes de Referência e Estudo Contextual</h2>
+<ul>
+<li><strong>Anthropic Agent SDK</strong>: Referência de design para o ciclo de vida do Agent Loop: <a href="https://code.claude.com/docs/pt/agent-sdk/agent-loop">https://code.claude.com/docs/pt/agent-sdk/agent-loop</a></li>
+<li><strong>Claude Code CLI &amp; Worktrees</strong>: Melhores práticas e isolamento de processos agênticos: <a href="https://code.claude.com/docs/pt/worktrees">https://code.claude.com/docs/pt/worktrees</a></li>
+<li><strong>Best Practices Anthropic</strong>: Recomendações oficiais de uso de ferramentas locais no host: <a href="https://code.claude.com/docs/pt/best-practices">https://code.claude.com/docs/pt/best-practices</a></li>
+<li><strong>Ecosystem and Memory</strong>: Estudo sobre o comportamento de engenharia de contexto e memória: <a href="https://code.claude.com/docs/pt/memory">https://code.claude.com/docs/pt/memory</a></li>
+<li><strong>Lemon Blog</strong>: Para aprofundar nos fundamentos de agentes e como escrever instruções ricas, veja o artigo: <a href="https://lemon.dev.br/pt/blog/o-que-e-um-agent-e-como-criar-agents-customizados-com-claude-code">Como criar agents customizados com Claude Code</a></li>
+<li><strong>Lemon Blog</strong>: Para entender mais sobre otimização do ciclo de desenvolvimento com ferramentas de economia de tokens, leia: <a href="https://lemon.dev.br/pt/blog/economia-tokens-stack-skills-cli">Entendendo a economia de tokens em CLI agênticos</a></li>
+<li><strong>Lemon Blog</strong>: Para compreender o funcionamento interno e a arquitetura por trás da correção recursiva de erros, confira: <a href="https://lemon.dev.br/pt/blog/skill-recursiva-feedback-loop-harness">Implementando loops recursivos de correção em AI Harness</a></li>
+</ul>
+<p>Voltar ao <a href="index.md">índice</a>.</p>
+</section>
+      <footer class="ebook-author" aria-label="Sobre os autores">
+        <div>
+          <p class="ebook-author-name">Anderson Lima</p>
+          <a href="https://lemon.dev.br" class="ebook-author-link" target="_blank" rel="noopener noreferrer">lemon.dev.br</a>
+        </div>
+        <p class="ebook-author-coauthor">Co-Autor: Claude — Anthropic</p>
+      </footer>
+    </div>
+  </main>
+</div>
+
+<script>
+'use strict';
+
+var CHAPTER_INDEX = [{"id":"index","title":"Índice"},{"id":"capitulo-01-o-llm","title":"Capítulo 1: O LLM"},{"id":"capitulo-02-o-harness","title":"Capítulo 2: O Harness"},{"id":"capitulo-03-o-agent","title":"Capítulo 3: O Agent"},{"id":"capitulo-04-o-subagent","title":"Capítulo 4: O Subagent"},{"id":"capitulo-05-o-context","title":"Capítulo 5: O Context"},{"id":"capitulo-06-o-skill","title":"Capítulo 6: O Skill"},{"id":"capitulo-07-plugin","title":"Capítulo 7: Plugin"},{"id":"capitulo-08-mcp","title":"Capítulo 8: MCP"},{"id":"capitulo-09-cli","title":"Capítulo 9: CLI"},{"id":"capitulo-10-sintese","title":"Capítulo 10: Síntese"}];
+
+// ── Theme ──
+var Theme = {
+  _moonIcon: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+  _sunIcon:  '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>',
+  init: function() {
+    var saved = 'dark';
+    try { saved = localStorage.getItem('theme') || 'dark'; } catch(e) {}
+    this._apply(saved);
+  },
+  _apply: function(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    var isDark = theme === 'dark';
+    var icon  = isDark ? this._sunIcon  : this._moonIcon;
+    var label = isDark ? 'Modo claro'   : 'Modo escuro';
+    ['theme-btn','theme-btn2'].forEach(function(id) {
+      var b = document.getElementById(id);
+      if (b) { b.innerHTML = icon; b.setAttribute('aria-label', label); }
+    });
+  },
+  toggle: function() {
+    var cur = document.documentElement.getAttribute('data-theme');
+    var next = cur === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem('theme', next); } catch(e) {}
+    this._apply(next);
+  }
+};
+
+// ── Sidebar ──
+var Sidebar = {
+  _open: false,
+  init: function() {
+    if (!('IntersectionObserver' in window)) return;
+    var self = this;
+    var io = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) { if (e.isIntersecting) self._setActive(e.target.id); });
+    }, { rootMargin: '-15% 0px -55% 0px' });
+    document.querySelectorAll('.ebook-section').forEach(function(s) { io.observe(s); });
+  },
+  _setActive: function(id) {
+    document.querySelectorAll('.nav-link').forEach(function(a) {
+      a.classList.toggle('active', a.dataset.section === id);
+    });
+    var active = document.querySelector('.nav-link.active');
+    if (active) active.scrollIntoView({ block: 'nearest' });
+    var ch = CHAPTER_INDEX.find(function(c) { return c.id === id; });
+    var el = document.getElementById('topbar-title');
+    if (ch && el) el.textContent = ch.title;
+  },
+  open: function() {
+    this._open = true;
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('sidebar-backdrop').classList.add('visible');
+    document.getElementById('menu-btn').setAttribute('aria-expanded', 'true');
+  },
+  close: function() {
+    this._open = false;
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-backdrop').classList.remove('visible');
+    document.getElementById('menu-btn').setAttribute('aria-expanded', 'false');
+  },
+  toggle: function() { this._open ? this.close() : this.open(); }
+};
+
+// ── Spotlight ──
+var Spotlight = {
+  _open: false,
+  _sel:  0,
+  _docIcon: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>',
+  init: function() {
+    CHAPTER_INDEX.forEach(function(ch) {
+      var el = document.getElementById(ch.id);
+      if (el) ch.text = el.textContent.replace(/\s+/g, ' ').slice(0, 200).trim();
+    });
+    var inp  = document.getElementById('spotlight-input');
+    var self = this;
+    inp.addEventListener('input', function() { self._search(inp.value); });
+    inp.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); self._move(1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); self._move(-1); }
+      else if (e.key === 'Enter') { self._select(); }
+    });
+    document.getElementById('spotlight-overlay').addEventListener('click', function(e) {
+      if (e.target.id === 'spotlight-overlay') self.close();
+    });
+    document.getElementById('spotlight-close').addEventListener('click', function() { self.close(); });
+  },
+  open: function() {
+    this._open = true;
+    document.getElementById('spotlight-overlay').classList.add('open');
+    this._sel = 0;
+    var inp = document.getElementById('spotlight-input');
+    inp.value = '';
+    setTimeout(function() { inp.focus(); }, 30);
+    this._search('');
+  },
+  close: function() {
+    this._open = false;
+    document.getElementById('spotlight-overlay').classList.remove('open');
+  },
+  _search: function(q) {
+    var query = (q || '').toLowerCase().trim();
+    this._sel = 0;
+    var results = query
+      ? CHAPTER_INDEX.filter(function(ch) {
+          return ch.title.toLowerCase().indexOf(query) !== -1 ||
+                 (ch.text && ch.text.toLowerCase().indexOf(query) !== -1);
+        }).slice(0, 8)
+      : CHAPTER_INDEX.slice(0, 7);
+    this._render(results);
+  },
+  _render: function(results) {
+    var self = this;
+    var list = document.getElementById('spotlight-results');
+    if (!results.length) {
+      list.innerHTML = '<li style="padding:16px;text-align:center;color:var(--text-muted);font-size:14px">Nenhum resultado</li>';
+      return;
+    }
+    var icon = self._docIcon;
+    list.innerHTML = results.map(function(r, i) {
+      return '<li class="spotlight-result' + (i === 0 ? ' selected' : '') + '" data-id="' + r.id + '" role="option" tabindex="-1">' +
+             '<span class="result-icon">' + icon + '</span>' +
+             '<span><div class="result-title">' + r.title + '</div>' +
+             (r.text ? '<div class="result-preview">' + r.text.slice(0, 90) + '…</div>' : '') +
+             '</span></li>';
+    }).join('');
+    list.querySelectorAll('.spotlight-result').forEach(function(el) {
+      el.addEventListener('click', function() { self._goTo(el.dataset.id); });
+    });
+  },
+  _move: function(dir) {
+    var items = document.querySelectorAll('.spotlight-result');
+    if (!items.length) return;
+    items[this._sel].classList.remove('selected');
+    this._sel = (this._sel + dir + items.length) % items.length;
+    items[this._sel].classList.add('selected');
+    items[this._sel].scrollIntoView({ block: 'nearest' });
+  },
+  _select: function() {
+    var sel = document.querySelector('.spotlight-result.selected');
+    if (sel) this._goTo(sel.dataset.id);
+  },
+  _goTo: function(id) {
+    this.close();
+    var el = document.getElementById(id);
+    if (!el) return;
+    setTimeout(function() { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+  }
+};
+
+// ── Fullscreen ──
+var Fullscreen = {
+  _active: false,
+  _maxIcon: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>',
+  _minIcon: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>',
+  toggle: function() { this._active ? this.exit() : this._enter(); },
+  _enter: function() {
+    this._active = true;
+    document.body.classList.add('fullscreen-mode');
+    var el = document.documentElement;
+    if (el.requestFullscreen) el.requestFullscreen().catch(function() {});
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    this._updateBtns();
+    var self = this;
+    document.addEventListener('fullscreenchange', function onFsc() {
+      if (!document.fullscreenElement) { self.exit(); }
+      document.removeEventListener('fullscreenchange', onFsc);
+    });
+  },
+  exit: function() {
+    this._active = false;
+    document.body.classList.remove('fullscreen-mode');
+    if (document.fullscreenElement) document.exitFullscreen().catch(function() {});
+    this._updateBtns();
+  },
+  _updateBtns: function() {
+    var icon  = this._active ? this._minIcon : this._maxIcon;
+    var label = this._active ? 'Sair do modo de leitura' : 'Modo de leitura';
+    ['fullscreen-btn','fullscreen-btn2'].forEach(function(id) {
+      var b = document.getElementById(id);
+      if (b) { b.innerHTML = icon; b.setAttribute('aria-label', label); }
+    });
+  }
+};
+
+// ── Progress bar ──
+function updateProgress() {
+  var scrollTop = window.scrollY || document.documentElement.scrollTop;
+  var docH = document.documentElement.scrollHeight - window.innerHeight;
+  var pct  = docH > 0 ? Math.min(100, Math.round((scrollTop / docH) * 100)) : 0;
+  var bar  = document.getElementById('progress-bar');
+  if (bar) { bar.style.width = pct + '%'; bar.setAttribute('aria-valuenow', String(pct)); }
+}
+
+// ── Keyboard shortcuts ──
+document.addEventListener('keydown', function(e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    Spotlight._open ? Spotlight.close() : Spotlight.open();
+    return;
+  }
+  if (e.key === 'Escape') {
+    if (Spotlight._open) { Spotlight.close(); return; }
+    if (Fullscreen._active) { Fullscreen.exit(); return; }
+    if (Sidebar._open) { Sidebar.close(); return; }
+  }
+});
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.ebook-section table').forEach(function(tbl) {
+    var wrap = document.createElement('div');
+    wrap.className = 'table-wrap';
+    tbl.parentNode.insertBefore(wrap, tbl);
+    wrap.appendChild(tbl);
+  });
+
+  Theme.init();
+  Sidebar.init();
+  Spotlight.init();
+
+  ['theme-btn','theme-btn2'].forEach(function(id) {
+    var b = document.getElementById(id);
+    if (b) b.addEventListener('click', function() { Theme.toggle(); });
+  });
+
+  var menuBtn = document.getElementById('menu-btn');
+  if (menuBtn) menuBtn.addEventListener('click', function() { Sidebar.toggle(); });
+
+  var backdrop = document.getElementById('sidebar-backdrop');
+  if (backdrop) backdrop.addEventListener('click', function() { Sidebar.close(); });
+
+  ['sidebar-search-btn','sidebar-search-btn2','topbar-search-btn'].forEach(function(id) {
+    var b = document.getElementById(id);
+    if (b) b.addEventListener('click', function() { Spotlight.open(); });
+  });
+
+  ['fullscreen-btn','fullscreen-btn2'].forEach(function(id) {
+    var b = document.getElementById(id);
+    if (b) b.addEventListener('click', function() { Fullscreen.toggle(); });
+  });
+
+  var exitBtn = document.getElementById('exit-fullscreen');
+  if (exitBtn) exitBtn.addEventListener('click', function() { Fullscreen.exit(); });
+
+  window.addEventListener('scroll', updateProgress, { passive: true });
+  updateProgress();
+});
+</script>
+</body>
+</html>
