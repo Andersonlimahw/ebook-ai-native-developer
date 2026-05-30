@@ -1,7 +1,6 @@
 import { marked } from "marked";
 import fs from "fs";
 import path from "path";
-import puppeteer from "puppeteer";
 import { loadLocale, getSupportedLanguages, type I18nLocale } from "./i18n";
 
 const LINK_MAP: Record<string, string> = {
@@ -39,7 +38,29 @@ const CSS = `
   --code-bg: #0f172a;
   --code-text: #34d399;
 }
-body { font-family: sans-serif; padding: 20px; }
+* { transition: background-color 0.2s, color 0.2s; }
+body {
+  font-family: sans-serif;
+  padding: 20px;
+  background-color: var(--bg);
+  color: var(--text);
+}
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 8px 16px;
+  border: 1px solid var(--sidebar-border);
+  background-color: var(--sidebar-bg);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  z-index: 1000;
+}
+.theme-toggle:hover {
+  background-color: var(--accent);
+  color: var(--bg);
+}
 `;
 
 function compileChapter(inPath: string): string {
@@ -47,17 +68,23 @@ function compileChapter(inPath: string): string {
   return marked.parse(mdText) as string;
 }
 
-function buildHtml(content: string, theme: string, lang: string, locale: I18nLocale): string {
+function buildHtml(
+  content: string,
+  lang: string,
+  locale: I18nLocale,
+): string {
   const langCode = lang === "pt-BR" ? "pt-BR" : lang;
   return `<!DOCTYPE html>
-<html lang="${langCode}" data-theme="${theme}">
+<html lang="${langCode}" data-theme="light">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="${locale.metadata.subtitle}">
   <title>${locale.metadata.title}</title>
   <style>${CSS}</style>
 </head>
 <body>
+  <button class="theme-toggle" id="themeToggle">🌙</button>
   <main class="main-content">
     <header class="ebook-header">
       <h1>${locale.metadata.title}</h1>
@@ -65,6 +92,22 @@ function buildHtml(content: string, theme: string, lang: string, locale: I18nLoc
     </header>
     <article class="content">${content}</article>
   </main>
+  <script>
+    const html = document.documentElement;
+    const toggle = document.getElementById('themeToggle');
+    const savedTheme = localStorage.getItem('theme') || 'light';
+
+    html.setAttribute('data-theme', savedTheme);
+    toggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
+    toggle.addEventListener('click', () => {
+      const current = html.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      toggle.textContent = next === 'dark' ? '☀️' : '🌙';
+    });
+  </script>
 </body>
 </html>`;
 }
@@ -75,7 +118,7 @@ function parseArgs(): { lang: string } {
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--lang" && args[i + 1]) {
-      lang = args[i + 1];
+      lang = args[i + 1] || "pt-BR";
       i++;
     }
   }
@@ -83,7 +126,7 @@ function parseArgs(): { lang: string } {
   return { lang };
 }
 
-async function main() {
+function main() {
   const { lang } = parseArgs();
   const supportedLangs = getSupportedLanguages();
 
@@ -134,37 +177,21 @@ async function main() {
   const sectionsJoined = compiledSections.join("\n\n");
   const locale = loadLocale(lang);
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox"],
-  });
-
-  const themes = ["light", "dark"];
   const outputLangDir = lang === "pt-BR" ? "pt-br" : lang;
   const destDir = path.join(outputRoot, outputLangDir);
   fs.mkdirSync(destDir, { recursive: true });
 
-  for (const theme of themes) {
-    const destPath = path.join(destDir, `ebook-${theme}.pdf`);
-    const htmlContent = buildHtml(sectionsJoined, theme, lang, locale);
+  const htmlContent = buildHtml(sectionsJoined, lang, locale);
+  const destPath = path.join(destDir, "index.html");
+  fs.writeFileSync(destPath, htmlContent);
 
-    const tempHtmlPath = path.join(destDir, `.tmp-${theme}.html`);
-    fs.writeFileSync(tempHtmlPath, htmlContent);
-
-    const page = await browser.newPage();
-    await page.goto(`file://${tempHtmlPath}`, { waitUntil: "networkidle2" });
-    await page.pdf({ path: destPath, format: "A4", printBackground: true });
-    await page.close();
-
-    fs.unlinkSync(tempHtmlPath);
-    console.log(`✓ PDF gerado: ${destPath}`);
-  }
-
-  await browser.close();
+  console.log(`✓ HTML gerado: ${destPath}`);
   console.log(`\n✓ Compilação concluída para [${lang}]`);
 }
 
-main().catch((err) => {
+try {
+  main();
+} catch (err: any) {
   console.error("Erro fatal:", err.message);
   process.exit(1);
-});
+}

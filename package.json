@@ -1,0 +1,22 @@
+{
+  "name": "desvendando-as-camadas-de-ai",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "compile": "bun run scripts/compile.ts",
+    "compile:pt": "bun run scripts/compile.ts --lang pt-BR",
+    "compile:en": "bun run scripts/compile.ts --lang en",
+    "compile:es": "bun run scripts/compile.ts --lang es",
+    "compile:all": "bun run scripts/compile-all.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "marked": "^18.0.4"
+  }
+}
