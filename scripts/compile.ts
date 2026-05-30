@@ -2,7 +2,7 @@ import { marked } from "marked";
 import fs from "fs";
 import path from "path";
 
-const TITLE = "Desvendando as Camadas de IA";
+const TITLE = "AI Native Developer";
 const SUBTITLE = "Um guia prático para developers no mundo nativo de IA";
 
 interface Chapter {
@@ -12,17 +12,57 @@ interface Chapter {
 }
 
 const CHAPTERS: Chapter[] = [
-  { filename: "index.md",       sectionId: "index",                title: "Índice" },
-  { filename: "01-llm.md",      sectionId: "capitulo-01-o-llm",    title: "Capítulo 1: O LLM" },
-  { filename: "02-harness.md",  sectionId: "capitulo-02-o-harness",title: "Capítulo 2: O Harness" },
-  { filename: "03-agent.md",    sectionId: "capitulo-03-o-agent",  title: "Capítulo 3: O Agent" },
-  { filename: "04-subagent.md", sectionId: "capitulo-04-o-subagent",title:"Capítulo 4: O Subagent" },
-  { filename: "05-context.md",  sectionId: "capitulo-05-o-context",title: "Capítulo 5: O Context" },
-  { filename: "06-skill.md",    sectionId: "capitulo-06-o-skill",  title: "Capítulo 6: O Skill" },
-  { filename: "07-plugin.md",   sectionId: "capitulo-07-plugin",   title: "Capítulo 7: Plugin" },
-  { filename: "08-mcp.md",      sectionId: "capitulo-08-mcp",      title: "Capítulo 8: MCP" },
-  { filename: "09-cli.md",      sectionId: "capitulo-09-cli",      title: "Capítulo 9: CLI" },
-  { filename: "10-sintese.md",  sectionId: "capitulo-10-sintese",  title: "Capítulo 10: Síntese" },
+  { filename: "index.md", sectionId: "index", title: "Índice" },
+  {
+    filename: "01-llm.md",
+    sectionId: "capitulo-01-o-llm",
+    title: "Capítulo 1: O LLM",
+  },
+  {
+    filename: "02-harness.md",
+    sectionId: "capitulo-02-o-harness",
+    title: "Capítulo 2: O Harness",
+  },
+  {
+    filename: "03-agent.md",
+    sectionId: "capitulo-03-o-agent",
+    title: "Capítulo 3: O Agent",
+  },
+  {
+    filename: "04-subagent.md",
+    sectionId: "capitulo-04-o-subagent",
+    title: "Capítulo 4: O Subagent",
+  },
+  {
+    filename: "05-context.md",
+    sectionId: "capitulo-05-o-context",
+    title: "Capítulo 5: O Context",
+  },
+  {
+    filename: "06-skill.md",
+    sectionId: "capitulo-06-o-skill",
+    title: "Capítulo 6: O Skill",
+  },
+  {
+    filename: "07-plugin.md",
+    sectionId: "capitulo-07-plugin",
+    title: "Capítulo 7: Plugin",
+  },
+  {
+    filename: "08-mcp.md",
+    sectionId: "capitulo-08-mcp",
+    title: "Capítulo 8: MCP",
+  },
+  {
+    filename: "09-cli.md",
+    sectionId: "capitulo-09-cli",
+    title: "Capítulo 9: CLI",
+  },
+  {
+    filename: "10-sintese.md",
+    sectionId: "capitulo-10-sintese",
+    title: "Capítulo 10: Síntese",
+  },
 ];
 
 // Green palette derived from #87BB2D (lemon.dev.br accent-green)
@@ -740,27 +780,29 @@ const ICONS = {
 };
 
 function buildSidebarNav(chapters: Chapter[]): string {
-  return chapters.map((ch, i) => {
-    const num = i === 0 ? "·" : String(i).padStart(2, "0");
-    return `<a href="#${ch.sectionId}" class="nav-link" data-section="${ch.sectionId}" onclick="if(window.innerWidth<1025){Sidebar.close()}">
+  return chapters
+    .map((ch, i) => {
+      const num = i === 0 ? "·" : String(i).padStart(2, "0");
+      return `<a href="#${ch.sectionId}" class="nav-link" data-section="${ch.sectionId}" onclick="if(window.innerWidth<1025){Sidebar.close()}">
       <span class="nav-num">${num}</span>
       <span>${ch.title}</span>
     </a>`;
-  }).join("\n");
+    })
+    .join("\n");
 }
 
 function buildHtml(content: string, chapters: Chapter[]): string {
   const navHtml = buildSidebarNav(chapters);
   const spotlightIndexJson = JSON.stringify(
-    chapters.map(ch => ({ id: ch.sectionId, title: ch.title }))
+    chapters.map((ch) => ({ id: ch.sectionId, title: ch.title })),
   );
 
   // Escape SVG strings for embedding in JS string literals
   const moonIcon = ICONS.moon.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-  const sunIcon  = ICONS.sun.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-  const maxIcon  = ICONS.maximize.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-  const minIcon  = ICONS.minimize.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-  const docIcon  = ICONS.doc.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+  const sunIcon = ICONS.sun.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+  const maxIcon = ICONS.maximize.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+  const minIcon = ICONS.minimize.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+  const docIcon = ICONS.doc.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 
   return `<!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
@@ -1147,7 +1189,9 @@ function main() {
     }
     console.log(`  • ${ch.filename}`);
     const html = marked.parse(fs.readFileSync(filePath, "utf-8")) as string;
-    sections.push(`<section id="${ch.sectionId}" class="ebook-section">${html}</section>`);
+    sections.push(
+      `<section id="${ch.sectionId}" class="ebook-section">${html}</section>`,
+    );
   }
 
   fs.mkdirSync(outputDir, { recursive: true });
