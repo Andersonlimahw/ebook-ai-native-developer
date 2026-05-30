@@ -4,11 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "compile": "bun run scripts/compile.ts",
-    "compile:pt": "bun run scripts/compile.ts --lang pt-BR",
-    "compile:en": "bun run scripts/compile.ts --lang en",
-    "compile:es": "bun run scripts/compile.ts --lang es",
-    "compile:all": "bun run scripts/compile-all.ts"
+    "compile": "bun run scripts/compile.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
