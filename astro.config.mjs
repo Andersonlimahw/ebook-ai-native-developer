@@ -1,8 +1,12 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 
+const base = "/ebook-ai-native-developer";
+const withBase = (path) => `${base}${path}`;
+
 export default defineConfig({
-  site: "https://lemon.dev.br",
+  site: "https://andersonlimahw.github.io",
+  base,
   integrations: [
     starlight({
       title: "AI Native Developer",
@@ -26,7 +30,7 @@ export default defineConfig({
         {
           icon: "download",
           label: "Baixar PDF",
-          href: "/ai-native-developer.pdf",
+          href: withBase("/ai-native-developer.pdf"),
         },
         {
           icon: "external",

@@ -132,4 +132,4 @@ MCP é o padrão aberto que dá ao agente uma porta única para o mundo externo:
 
 Temos agora todas as camadas conceituais. Falta o lugar concreto onde você opera tudo isso, no dia a dia, no terminal.
 
-Próximo: [Capítulo 09 — O CLI](/09-cli/).
+Próximo: [Capítulo 09 — O CLI](/ebook-ai-native-developer/09-cli/).

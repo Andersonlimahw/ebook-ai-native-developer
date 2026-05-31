@@ -219,4 +219,4 @@ Subagent é como você escala um agent de "especialista solo" para "squad". A me
 
 E tudo isso gira em torno de uma pergunta: o que cada agent enxerga? A resposta é a próxima camada.
 
-Próximo: [Capítulo 05 — O Context](/05-context/).
+Próximo: [Capítulo 05 — O Context](/ebook-ai-native-developer/05-context/).

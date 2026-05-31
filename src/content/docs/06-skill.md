@@ -173,4 +173,4 @@ Skill é conhecimento como documento, carregado sob demanda por *progressive dis
 
 Já temos agents, subagents, contexto e skills. Mas como você empacota tudo isso — uma squad inteira com suas skills, hooks e conexões — para instalar em outro repositório com um comando? Essa é a próxima camada.
 
-Próximo: [Capítulo 07 — O Plugin](/07-plugin/).
+Próximo: [Capítulo 07 — O Plugin](/ebook-ai-native-developer/07-plugin/).

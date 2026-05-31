@@ -3,19 +3,31 @@ import puppeteer from "puppeteer";
 
 const rootDir = process.cwd();
 const distDir = path.join(rootDir, "dist");
-const outputPath = path.join(distDir, "ai-native-developer.pdf");
+const baseFromEnv = process.env.ASTRO_BASE ?? "/ebook-ai-native-developer";
+const basePath = baseFromEnv === "/" ? "" : `/${baseFromEnv.replace(/^\/+|\/+$/g, "")}`;
+const baseDir = basePath ? path.join(distDir, basePath.slice(1)) : distDir;
+const basePdfPagePath = path.join(baseDir, "pdf", "index.html");
+const rootPdfPagePath = path.join(distDir, "pdf", "index.html");
+const hasBasePdfPage = await Bun.file(basePdfPagePath).exists();
+const hasRootPdfPage = await Bun.file(rootPdfPagePath).exists();
 
-if (!(await Bun.file(path.join(distDir, "pdf", "index.html")).exists())) {
-  console.error("dist/pdf/index.html não encontrado. Rode `bun run build:site` antes de gerar o PDF.");
+if (!hasBasePdfPage && !hasRootPdfPage) {
+  console.error("Página /pdf/ não encontrada em dist. Rode `bun run build:site` antes de gerar o PDF.");
   process.exit(1);
 }
+
+const outputDir = hasBasePdfPage ? baseDir : distDir;
+const outputPath = path.join(outputDir, "ai-native-developer.pdf");
+const pdfPathname = hasBasePdfPage ? `${basePath}/pdf/` : "/pdf/";
 
 const mimeTypes: Record<string, string> = {
   ".css": "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
+  ".ico": "image/x-icon",
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".pdf": "application/pdf",
+  ".png": "image/png",
   ".svg": "image/svg+xml",
   ".wasm": "application/wasm",
 };
@@ -61,7 +73,7 @@ try {
 
   const page = await browser.newPage();
   await page.setViewport({ width: 1240, height: 1754, deviceScaleFactor: 1 });
-  await page.goto(`${origin}/pdf/`, { waitUntil: "networkidle0" });
+  await page.goto(`${origin}${pdfPathname}`, { waitUntil: "networkidle0" });
   await page.emulateMediaType("print");
   await page.pdf({
     path: outputPath,

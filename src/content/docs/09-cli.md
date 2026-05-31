@@ -127,4 +127,4 @@ O CLI é onde tudo se encontra: o terminal como cabine de comando do harness, co
 
 Temos o stack inteiro. No último capítulo, montamos tudo de uma vez e seguimos a tarefa de CRUD de Pedidos da primeira à última camada, sem cortes.
 
-Próximo: [Capítulo 10 — Síntese](/10-sintese/).
+Próximo: [Capítulo 10 — Síntese](/ebook-ai-native-developer/10-sintese/).

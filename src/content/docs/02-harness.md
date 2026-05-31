@@ -118,11 +118,11 @@ graph LR
     T --> P
 ```
 
-**1. Ferramentas (tools).** São as funções que o modelo pode chamar: `Read`, `Write`, `Edit`, `Bash`, `Grep`, `Glob`, busca na web, e outras. Cada ferramenta tem um nome, uma descrição e um schema de argumentos. O modelo não executa nada — ele *pede* ao harness para executar. (Mais ferramentas, para sistemas externos, chegam via MCP no [Capítulo 08](/08-mcp/).)
+**1. Ferramentas (tools).** São as funções que o modelo pode chamar: `Read`, `Write`, `Edit`, `Bash`, `Grep`, `Glob`, busca na web, e outras. Cada ferramenta tem um nome, uma descrição e um schema de argumentos. O modelo não executa nada — ele *pede* ao harness para executar. (Mais ferramentas, para sistemas externos, chegam via MCP no [Capítulo 08](/ebook-ai-native-developer/08-mcp/).)
 
 **2. Permissões.** Antes de executar uma ferramenta sensível — editar um arquivo, rodar um comando — o harness aplica uma política: pergunta ao usuário, ou consulta uma allowlist, ou bloqueia. É a fronteira de segurança entre "o modelo quer fazer X" e "X acontece de verdade". Restringir as `tools` de um agent (Capítulo 03) é uma forma de definir essa fronteira por design.
 
-**3. Gestão de contexto.** A janela de contexto é finita (Capítulo 01). O harness decide o que entra: quais arquivos, quanto do histórico, resultados de quais ferramentas. Quando a conversa fica longa demais, ele **compacta** — resume o que passou para liberar espaço. Boa gestão de contexto é o que separa um harness que se perde de um que mantém o fio. É o tema do [Capítulo 05](/05-context/).
+**3. Gestão de contexto.** A janela de contexto é finita (Capítulo 01). O harness decide o que entra: quais arquivos, quanto do histórico, resultados de quais ferramentas. Quando a conversa fica longa demais, ele **compacta** — resume o que passou para liberar espaço. Boa gestão de contexto é o que separa um harness que se perde de um que mantém o fio. É o tema do [Capítulo 05](/ebook-ai-native-developer/05-context/).
 
 **4. Loop agêntico.** O `while` que vimos. É o que transforma uma resposta única numa sequência autônoma de passos.
 
@@ -196,4 +196,4 @@ O harness é o que transforma um previsor de tokens num agente que faz coisas. E
 
 Mas até aqui temos um harness genérico, que faz um pouco de tudo. O próximo passo é especializá-lo para um trabalho — dar a ele um papel, um modelo e limites. Isso é o agent.
 
-Próximo: [Capítulo 03 — O Agent](/03-agent/).
+Próximo: [Capítulo 03 — O Agent](/ebook-ai-native-developer/03-agent/).

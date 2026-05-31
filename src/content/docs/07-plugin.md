@@ -132,4 +132,4 @@ Plugin é a camada de empacotamento: ele pega agents, skills, comandos, hooks e 
 
 Sobrou uma dependência que o plugin empacota mas ainda não explicamos: como o agent fala com o mundo externo — o Postgres, o banco de dados de produção de verdade. Esse é o protocolo da próxima camada.
 
-Próximo: [Capítulo 08 — O MCP](/08-mcp/).
+Próximo: [Capítulo 08 — O MCP](/ebook-ai-native-developer/08-mcp/).

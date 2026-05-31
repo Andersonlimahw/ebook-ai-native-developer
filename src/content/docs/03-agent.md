@@ -93,7 +93,7 @@ Cada linha desse arquivo faz um trabalho. Vamos por partes.
 | `description` | **O campo mais importante.** Descreve *quando* usar o agent. É o que o sistema lê para decidir delegar a tarefa a ele. | "Use quando há decisão de design..." |
 | `model` | Qual LLM roda este agent. Você casa a dificuldade da tarefa com a capacidade do modelo. | `opus` (raciocínio profundo) |
 | `tools` | Quais ferramentas o agent pode usar. Omitir = herda todas. Restringir é uma decisão de segurança. | `Read, Grep, Glob` (só leitura) |
-| `skills` | Quais conhecimentos empacotados o agent deve preferir. Detalhado no [Capítulo 06](/06-skill/). | `improve-codebase-architecture`, `diagnose` |
+| `skills` | Quais conhecimentos empacotados o agent deve preferir. Detalhado no [Capítulo 06](/ebook-ai-native-developer/06-skill/). | `improve-codebase-architecture`, `diagnose` |
 
 Duas observações honestas sobre o frontmatter:
 
@@ -212,4 +212,4 @@ Um agent é um arquivo. Esse arquivo pega o cérebro genérico (LLM), coloca den
 
 Mas um especialista sozinho não constrói um CRUD de pedidos de alta confiabilidade. Para isso ele precisa de uma equipe. No próximo capítulo, transformamos este agent em um membro de uma squad.
 
-Próximo: [Capítulo 04 — O Subagent](/04-subagent/). Antes dele, se você pulou: [Capítulo 01 — O LLM](/01-llm/) e [Capítulo 02 — O Harness](/02-harness/).
+Próximo: [Capítulo 04 — O Subagent](/ebook-ai-native-developer/04-subagent/). Antes dele, se você pulou: [Capítulo 01 — O LLM](/ebook-ai-native-developer/01-llm/) e [Capítulo 02 — O Harness](/ebook-ai-native-developer/02-harness/).

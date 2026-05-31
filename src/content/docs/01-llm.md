@@ -55,7 +55,7 @@ Parece simples demais para explicar o que vemos. A intuição que falta é a esc
 **Zoom 3 — o que você controla.** Dois botões importam no dia a dia:
 
 - **Temperatura**: o quão "ousado" é o sorteio do próximo token. Temperatura baixa → respostas mais determinísticas e repetíveis; alta → mais variadas e criativas. Para tarefas de engenharia, baixa costuma ser melhor.
-- **Janela de contexto**: quantos tokens o modelo consegue "ver" de uma vez (prompt + resposta). Tudo que não cabe na janela, o modelo não enxerga. Esse limite é tão central que merece um capítulo só: [Capítulo 05 — O Context](/05-context/).
+- **Janela de contexto**: quantos tokens o modelo consegue "ver" de uma vez (prompt + resposta). Tudo que não cabe na janela, o modelo não enxerga. Esse limite é tão central que merece um capítulo só: [Capítulo 05 — O Context](/ebook-ai-native-developer/05-context/).
 
 ## O que o LLM **não** faz sozinho
 
@@ -122,4 +122,4 @@ O LLM é um previsor de próximo token treinado em escala suficiente para racioc
 
 O primeiro passo é o corpo mais básico: o programa que roda o modelo num loop e o conecta a ferramentas. É o harness.
 
-Próximo: [Capítulo 02 — O Harness](/02-harness/).
+Próximo: [Capítulo 02 — O Harness](/ebook-ai-native-developer/02-harness/).

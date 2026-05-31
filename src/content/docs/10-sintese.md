@@ -174,4 +174,4 @@ O stack está montado e ao seu alcance. A cabine de comando do terminal está ab
 - **Lemon Blog**: Para entender mais sobre otimização do ciclo de desenvolvimento com ferramentas de economia de tokens, leia: [Entendendo a economia de tokens em CLI agênticos](https://lemon.dev.br/pt/blog/economia-tokens-stack-skills-cli)
 - **Lemon Blog**: Para compreender o funcionamento interno e a arquitetura por trás da correção recursiva de erros, confira: [Implementando loops recursivos de correção em AI Harness](https://lemon.dev.br/pt/blog/skill-recursiva-feedback-loop-harness)
 
-Voltar ao [índice](/).
+Voltar ao [índice](/ebook-ai-native-developer/).

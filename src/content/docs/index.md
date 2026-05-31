@@ -7,7 +7,7 @@ sidebar:
 
 > Um e-book para desenvolvedores que querem se tornar AI-native — não só usar o chat, mas entender e construir os sistemas agênticos por baixo dele.
 
-<a class="pdf-download" href="/ai-native-developer.pdf" download>Baixar PDF completo</a>
+<a class="pdf-download" href="/ebook-ai-native-developer/ai-native-developer.pdf" download>Baixar PDF completo</a>
 
 Você já programa. Sabe ler um stack trace, desenhar um schema, discutir um trade-off de arquitetura. Mas o vocabulário novo chega rápido demais: *LLM*, *harness*, *agent*, *subagent*, *context*, *skill*, *plugin*, *MCP*, *CLI*. Todo mundo usa esses termos como se fossem óbvios, e raramente alguém mostra **onde cada um encaixa** e **como se conectam**.
 
@@ -67,16 +67,16 @@ Leia assim: o **LLM** é o cérebro. O **harness** é o corpo que dá a ele olho
 
 | # | Capítulo | O que você sai sabendo |
 |---|----------|------------------------|
-| 01 | [O LLM](/01-llm/) | O que o modelo faz e, principalmente, o que ele **não** faz sozinho. |
-| 02 | [O Harness](/02-harness/) | Como o LLM ganha loop, tools (TypeScript) e hooks de segurança determinísticos. |
-| 03 | [O Agent](/03-agent/) | **O capítulo-âncora.** Como estruturar e versionar o especialista de Orders. |
-| 04 | [O Subagent](/04-subagent/) | Delegação em squads de contexto isolado. Estudo de caso: squad `order` completa. |
-| 05 | [O Context](/05-context/) | Gestão de contexto, sinal sobre ruído e controle de memória de trabalho. |
-| 06 | [A Skill](/06-skill/) | Progressive disclosure, skills auto-melhoráveis e a regra anti-explosão de tokens. |
-| 07 | [O Plugin](/07-plugin/) | Empacotamento distribuível com slash commands, hooks e MCP integrados. |
-| 08 | [O MCP](/08-mcp/) | MCP vs CLI: o protocolo unificado de dados e ações externas. |
-| 09 | [O CLI](/09-cli/) | Terminal como cabine de comando, comandos customizados e Git Worktrees. |
-| 10 | [Síntese](/10-sintese/) | O stack agêntico completo em ação de ponta a ponta, com melhores práticas. |
+| 01 | [O LLM](/ebook-ai-native-developer/01-llm/) | O que o modelo faz e, principalmente, o que ele **não** faz sozinho. |
+| 02 | [O Harness](/ebook-ai-native-developer/02-harness/) | Como o LLM ganha loop, tools (TypeScript) e hooks de segurança determinísticos. |
+| 03 | [O Agent](/ebook-ai-native-developer/03-agent/) | **O capítulo-âncora.** Como estruturar e versionar o especialista de Orders. |
+| 04 | [O Subagent](/ebook-ai-native-developer/04-subagent/) | Delegação em squads de contexto isolado. Estudo de caso: squad `order` completa. |
+| 05 | [O Context](/ebook-ai-native-developer/05-context/) | Gestão de contexto, sinal sobre ruído e controle de memória de trabalho. |
+| 06 | [A Skill](/ebook-ai-native-developer/06-skill/) | Progressive disclosure, skills auto-melhoráveis e a regra anti-explosão de tokens. |
+| 07 | [O Plugin](/ebook-ai-native-developer/07-plugin/) | Empacotamento distribuível com slash commands, hooks e MCP integrados. |
+| 08 | [O MCP](/ebook-ai-native-developer/08-mcp/) | MCP vs CLI: o protocolo unificado de dados e ações externas. |
+| 09 | [O CLI](/ebook-ai-native-developer/09-cli/) | Terminal como cabine de comando, comandos customizados e Git Worktrees. |
+| 10 | [Síntese](/ebook-ai-native-developer/10-sintese/) | O stack agêntico completo em ação de ponta a ponta, com melhores práticas. |
 
 ## Como ler
 
@@ -96,4 +96,4 @@ Cada capítulo segue a mesma disciplina pedagógica:
 - **Modelos citados**: a família Claude 4.X é usada como referência concreta — Opus 4.8 (`claude-opus-4-8`), Sonnet 4.6 (`claude-sonnet-4-6`), Haiku 4.5 (`claude-haiku-4-5`). Os conceitos valem para qualquer LLM moderno.
 - **Voz**: a inspiração em educadores como Andrej Karpathy (código primeiro) e em autores de engenharia como Robert C. Martin e Martin Fowler (clareza de princípios) é **tom**, não citação. Nenhuma frase é colocada na boca de pessoas reais.
 
-Comece pelo [Capítulo 01 — O LLM](/01-llm/).
+Comece pelo [Capítulo 01 — O LLM](/ebook-ai-native-developer/01-llm/).

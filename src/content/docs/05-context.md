@@ -116,4 +116,4 @@ Context é a memória de trabalho do modelo: finita, montada a cada chamada, e a
 
 Mas há um tipo de conhecimento que você não quer recarregar a cada chamada nem deixar morrer na compactação: o know-how reutilizável. Para isso existe uma camada própria.
 
-Próximo: [Capítulo 06 — A Skill](/06-skill/).
+Próximo: [Capítulo 06 — A Skill](/ebook-ai-native-developer/06-skill/).
