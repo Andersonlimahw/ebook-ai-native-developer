@@ -1,18 +1,21 @@
 {
   "name": "desvendando-as-camadas-de-ai",
-  "module": "index.ts",
   "type": "module",
   "private": true,
   "scripts": {
-    "compile": "bun run scripts/compile.ts"
+    "dev": "bunx --bun astro dev",
+    "build": "bunx --bun astro build && bun run pdf",
+    "build:site": "bunx --bun astro build",
+    "preview": "bunx --bun astro preview",
+    "check": "bunx --bun astro check",
+    "pdf": "bun run scripts/build-pdf.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
+    "@astrojs/check": "latest",
+    "@astrojs/starlight": "latest",
+    "@types/bun": "latest",
+    "astro": "latest",
+    "puppeteer": "^25.1.0",
     "typescript": "^5"
-  },
-  "dependencies": {
-    "marked": "^18.0.4"
   }
 }

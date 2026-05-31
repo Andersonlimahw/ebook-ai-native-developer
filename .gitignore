@@ -1,5 +1,6 @@
 # dependencies (bun install)
-node_modules
+node_modules/
+.astro/
 
 # generated output (built by CI)
 output/
@@ -9,7 +10,7 @@ output/
 
 # output
 out
-dist
+dist/
 *.tgz
 
 # code coverage

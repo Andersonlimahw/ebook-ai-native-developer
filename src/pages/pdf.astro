@@ -1,0 +1,283 @@
+---
+import { getCollection, render } from "astro:content";
+
+const entries = (await getCollection("docs")).sort(
+  (a, b) => (a.data.sidebar?.order ?? 999) - (b.data.sidebar?.order ?? 999),
+);
+
+const pages = await Promise.all(
+  entries.map(async (entry) => {
+    const { Content } = await render(entry);
+    return { entry, Content };
+  }),
+);
+
+const generatedAt = new Intl.DateTimeFormat("pt-BR", {
+  dateStyle: "long",
+}).format(new Date());
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>AI Native Developer — PDF</title>
+    <style is:global>
+      :root {
+        --accent: #87bb2d;
+        --accent-dark: #4f6e1c;
+        --ink: #182011;
+        --muted: #5f6b55;
+        --line: #dbe7cf;
+        --surface: #f7fbf1;
+        --code: #10140c;
+      }
+
+      @page {
+        size: A4;
+        margin: 18mm 16mm 20mm;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        color: var(--ink);
+        background: white;
+        font: 12pt/1.55 Inter, "Red Hat Display", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      a {
+        color: var(--accent-dark);
+        text-decoration: none;
+      }
+
+      a[href^="http"]::after {
+        color: var(--muted);
+        content: " (" attr(href) ")";
+        font-size: 0.78em;
+        overflow-wrap: anywhere;
+      }
+
+      .cover {
+        align-content: center;
+        min-height: 250mm;
+        break-after: page;
+        border-left: 8px solid var(--accent);
+        padding: 0 0 0 18mm;
+      }
+
+      .brand {
+        color: var(--accent-dark);
+        font-size: 11pt;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .cover h1 {
+        margin: 16mm 0 8mm;
+        max-width: 13cm;
+        font-size: 42pt;
+        line-height: 1;
+      }
+
+      .cover p {
+        max-width: 12cm;
+        color: var(--muted);
+        font-size: 15pt;
+      }
+
+      .cover footer {
+        margin-top: 28mm;
+        color: var(--muted);
+        font-size: 10pt;
+      }
+
+      .toc {
+        break-after: page;
+      }
+
+      .toc h2 {
+        margin-top: 0;
+        border-bottom: 2px solid var(--accent);
+        padding-bottom: 5mm;
+      }
+
+      .toc ol {
+        margin: 0;
+        padding-left: 0;
+        list-style: none;
+      }
+
+      .toc li {
+        display: flex;
+        gap: 8mm;
+        border-bottom: 1px solid var(--line);
+        padding: 3.5mm 0;
+      }
+
+      .toc .order {
+        min-width: 12mm;
+        color: var(--accent-dark);
+        font-weight: 800;
+      }
+
+      article {
+        break-before: page;
+      }
+
+      article:first-of-type {
+        break-before: auto;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4 {
+        color: var(--ink);
+        line-height: 1.18;
+        page-break-after: avoid;
+      }
+
+      h1 {
+        margin: 0 0 10mm;
+        border-bottom: 3px solid var(--accent);
+        padding-bottom: 5mm;
+        font-size: 26pt;
+      }
+
+      h2 {
+        margin: 12mm 0 4mm;
+        font-size: 18pt;
+      }
+
+      h3 {
+        margin: 9mm 0 3mm;
+        font-size: 14pt;
+      }
+
+      p,
+      li {
+        orphans: 3;
+        widows: 3;
+      }
+
+      blockquote {
+        margin: 6mm 0;
+        border-left: 4px solid var(--accent);
+        background: var(--surface);
+        padding: 4mm 5mm;
+        color: #2d3a22;
+      }
+
+      code {
+        border-radius: 3px;
+        background: #edf5e2;
+        padding: 0.08em 0.28em;
+        color: #243414;
+        font-family: "SF Mono", "JetBrains Mono", ui-monospace, monospace;
+        font-size: 0.88em;
+      }
+
+      pre {
+        max-width: 100%;
+        break-inside: avoid;
+        border: 1px solid #293321;
+        border-radius: 6px;
+        background: var(--code);
+        padding: 4mm;
+        color: #edf5e2;
+        font-size: 8.7pt;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+      }
+
+      pre code {
+        background: transparent;
+        color: inherit;
+        padding: 0;
+      }
+
+      table {
+        width: 100%;
+        break-inside: avoid;
+        border-collapse: collapse;
+        font-size: 9.5pt;
+      }
+
+      th,
+      td {
+        border: 1px solid var(--line);
+        padding: 2.5mm;
+        vertical-align: top;
+      }
+
+      th {
+        background: var(--surface);
+        color: var(--accent-dark);
+        text-align: left;
+      }
+
+      hr {
+        margin: 10mm 0;
+        border: 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .chapter-description {
+        margin: -6mm 0 8mm;
+        color: var(--muted);
+        font-size: 11pt;
+      }
+
+      .sl-anchor-link,
+      .sr-only,
+      [data-pagefind-ignore] {
+        display: none !important;
+      }
+
+      .pdf-download {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="cover">
+      <div class="brand">AI Native Developer</div>
+      <h1>Desvendando as Camadas de AI</h1>
+      <p>Um guia prático para developers no mundo nativo de IA.</p>
+      <footer>lemon.dev.br · Anderson Lima · Gerado em {generatedAt}</footer>
+    </section>
+
+    <nav class="toc" aria-label="Sumário">
+      <h2>Sumário</h2>
+      <ol>
+        {pages.map(({ entry }) => (
+          <li>
+            <span class="order">{String(entry.data.sidebar?.order ?? 0).padStart(2, "0")}</span>
+            <span>{entry.data.title}</span>
+          </li>
+        ))}
+      </ol>
+    </nav>
+
+    <main>
+      {pages.map(({ entry, Content }) => (
+        <article>
+          <h1>{entry.data.title}</h1>
+          <p class="chapter-description">{entry.data.description}</p>
+          <Content />
+        </article>
+      ))}
+    </main>
+  </body>
+</html>
