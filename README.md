@@ -1,24 +1,45 @@
-# Desvendando as Camadas de AI
+# AI Native Developer
 
-Guia de desenvolvimento agêntico com Claude Code e stacks AI-native.
+Guia de desenvolvimento agêntico com Claude Code, Codex e stacks AI-native.
 
-## Contribuição
+## Desenvolvimento
 
-- Faça um fork do projeto.
-- Crie uma branch para sua feature ou correção (`git checkout -b feature/nome-da-feature`).
-- Envie suas alterações (`git commit -m 'feat: ...'`).
-- Abra um Pull Request.
-
-## Compilação
-
-Para gerar os e-books, execute o script de compilação:
+Este projeto usa Bun, Astro e Starlight.
 
 ```bash
-bun scripts/compile.ts
+bun install
+bun run dev
 ```
 
-Os arquivos gerados estarão organizados por locale em `output/locale/`.
+## Build
+
+```bash
+bun run check
+bun run build
+bun run preview
+```
+
+O site estático é gerado em `dist/`. O build completo também gera
+`dist/ai-native-developer.pdf`, usado pelo botão **Baixar PDF** no site.
+
+## PDF
+
+Para regenerar apenas o PDF depois de um build do site:
+
+```bash
+bun run build:site
+bun run pdf
+```
+
+O PDF é renderizado a partir da rota interna `/pdf/`, com estilos próprios para
+A4, capa, sumário, quebras de página, tabelas, blocos de código e cores Lemon.
+
+## Conteúdo
+
+O conteúdo publicado fica em `src/content/docs/`. Os diretórios `core/en` e
+`core/es` permanecem como legado não publicado.
 
 ---
+
 Projeto desenvolvido por **Anderson Lima**.
 Saiba mais em: https://lemon.dev.br

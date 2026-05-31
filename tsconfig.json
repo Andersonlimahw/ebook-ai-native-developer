@@ -1,11 +1,12 @@
 {
+  "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
     // Environment setup & latest features
     "lib": ["ESNext"],
     "target": "ESNext",
     "module": "Preserve",
     "moduleDetection": "force",
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "allowJs": true,
     "types": ["bun"],
 

@@ -1,0 +1,14 @@
+{
+  "search.label": "Pesquisar",
+  "search.cancelLabel": "Cancelar",
+  "pagefind.clear_search": "Limpar",
+  "pagefind.load_more": "Carregar mais resultados",
+  "pagefind.search_label": "Pesquisar neste site",
+  "pagefind.filters_label": "Filtros",
+  "pagefind.zero_results": "Nenhum resultado para [SEARCH_TERM]",
+  "pagefind.many_results": "[COUNT] resultados para [SEARCH_TERM]",
+  "pagefind.one_result": "[COUNT] resultado para [SEARCH_TERM]",
+  "pagefind.alt_search": "Nenhum resultado para [SEARCH_TERM]. Mostrando resultados para [DIFFERENT_TERM]",
+  "pagefind.search_suggestion": "Nenhum resultado para [SEARCH_TERM]. Tente uma das buscas abaixo:",
+  "pagefind.searching": "Buscando por [SEARCH_TERM]..."
+}

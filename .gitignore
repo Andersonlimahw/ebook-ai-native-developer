@@ -1,15 +1,13 @@
 # dependencies (bun install)
-node_modules
-
-# generated output (built by CI)
-output/
+node_modules/
+.astro/
 
 # private Claude Code config
 .claude/
 
 # output
 out
-dist
+dist/
 *.tgz
 
 # code coverage

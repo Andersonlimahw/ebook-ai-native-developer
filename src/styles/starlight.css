@@ -1,0 +1,67 @@
+:root {
+  --sl-color-accent-low: #223412;
+  --sl-color-accent: #87bb2d;
+  --sl-color-accent-high: #dff5b3;
+  --sl-color-white: #f8faf5;
+  --sl-font: "Red Hat Display", Inter, system-ui, sans-serif;
+  --sl-font-mono: "SF Mono", "Fira Code", "JetBrains Mono", ui-monospace, monospace;
+}
+
+:root[data-theme="light"] {
+  --sl-color-accent-low: #e9f8d0;
+  --sl-color-accent: #5f8d1f;
+  --sl-color-accent-high: #25380d;
+  --sl-color-white: #171b12;
+}
+
+.site-title {
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.sl-markdown-content a:not(:where(.not-content *)) {
+  color: var(--sl-color-accent-high);
+}
+
+.sl-markdown-content blockquote {
+  border-inline-start-color: var(--sl-color-accent);
+}
+
+.sl-markdown-content code:not(:where(.not-content *)) {
+  color: var(--sl-color-accent-high);
+}
+
+.pdf-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0.25rem 0 1.25rem;
+  border: 1px solid var(--sl-color-accent);
+  border-radius: 6px;
+  background: var(--sl-color-accent);
+  padding: 0.7rem 0.95rem;
+  color: #10140c !important;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.pdf-download::before {
+  content: "↓";
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+.pdf-download:hover {
+  border-color: var(--sl-color-accent-high);
+  background: var(--sl-color-accent-high);
+}
+
+@media print {
+  .site-title,
+  .sidebar-pane,
+  starlight-theme-select,
+  starlight-search,
+  .pdf-download {
+    display: none;
+  }
+}
