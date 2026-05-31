@@ -49,12 +49,13 @@ const server = Bun.serve({
 });
 
 const origin = `http://127.0.0.1:${server.port}`;
+const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
 let browser: Awaited<ReturnType<typeof puppeteer.launch>> | undefined;
 
 try {
   browser = await puppeteer.launch({
     headless: true,
-    channel: "chrome",
+    ...(executablePath ? { executablePath } : { channel: "chrome" as const }),
     args: ["--no-sandbox", "--disable-dev-shm-usage"],
   });
 

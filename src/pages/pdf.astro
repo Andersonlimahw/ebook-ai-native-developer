@@ -192,19 +192,56 @@ const generatedAt = new Intl.DateTimeFormat("pt-BR", {
         break-inside: avoid;
         border: 1px solid #293321;
         border-radius: 6px;
-        background: var(--code);
+        background: var(--code) !important;
         padding: 4mm;
-        color: #edf5e2;
+        color: #e5e7eb;
         font-size: 8.7pt;
         line-height: 1.45;
         overflow-wrap: anywhere;
         white-space: pre-wrap;
       }
 
-      pre code {
-        background: transparent;
+      pre,
+      pre *,
+      .expressive-code,
+      .expressive-code *,
+      .expressive-code span,
+      .expressive-code .code,
+      .expressive-code .ec-line {
+        --0: #e5e7eb !important;
+        --1: #e5e7eb !important;
+        color: #e5e7eb !important;
+      }
+
+      pre code,
+      pre code *,
+      .expressive-code pre,
+      .expressive-code pre code {
+        background: transparent !important;
         color: inherit;
         padding: 0;
+      }
+
+      .expressive-code figure,
+      .expressive-code .frame {
+        break-inside: avoid;
+        border-color: #293321 !important;
+        background: var(--code) !important;
+        margin: 6mm 0;
+      }
+
+      .expressive-code pre,
+      .expressive-code code,
+      .expressive-code .ec-line,
+      .expressive-code .code {
+        background: var(--code) !important;
+      }
+
+      .expressive-code figcaption,
+      .expressive-code .copy,
+      .expressive-code link,
+      .expressive-code script {
+        display: none !important;
       }
 
       table {

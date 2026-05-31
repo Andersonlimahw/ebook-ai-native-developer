@@ -7,12 +7,19 @@ export default defineConfig({
     starlight({
       title: "AI Native Developer",
       description: "Um guia prático para developers no mundo nativo de IA",
-      favicon: "/favicon.svg",
+      favicon: "/favicon.ico",
+      logo: {
+        src: "./src/assets/logo-header.png",
+        alt: "Lemon.dev",
+      },
       locales: {
         root: {
           label: "Português",
           lang: "pt-BR",
         },
+      },
+      components: {
+        Footer: "./src/components/Footer.astro",
       },
       customCss: ["./src/styles/starlight.css"],
       social: [

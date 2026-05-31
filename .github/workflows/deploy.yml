@@ -10,6 +10,10 @@ permissions:
   pages: write
   id-token: write
 
+env:
+  ASTRO_TELEMETRY_DISABLED: "1"
+  PUPPETEER_SKIP_DOWNLOAD: "true"
+
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -27,17 +31,26 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Install dependencies
-        run: bun install
+      - name: Setup Chrome for PDF export
+        id: setup-chrome
+        uses: browser-actions/setup-chrome@v1
 
-      - name: Build ebook
-        run: bun run compile
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check Astro project
+        run: bun run check
+
+      - name: Build site and PDF
+        env:
+          PUPPETEER_EXECUTABLE_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+        run: bun run build
 
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: output
+          path: dist
 
       - uses: actions/deploy-pages@v4
         id: deployment
