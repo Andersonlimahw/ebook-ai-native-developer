@@ -165,16 +165,16 @@ export class GTMAnalyticsProvider implements AnalyticsProvider {
 }
 
 /**
- * AnalyticsManager following the Service Locator/Singleton pattern.
- * Manages the active provider and delegates tracking calls to it.
+ * AnalyticsManager following the Composite + Singleton pattern.
+ * Manages multiple providers simultaneously and delegates tracking calls to all of them.
+ * This enables running GTM and GA4 side-by-side without code changes in consumers.
  */
 export class AnalyticsManager {
   private static instance: AnalyticsManager;
-  private provider: AnalyticsProvider;
+  private providers: AnalyticsProvider[] = [];
 
   private constructor() {
-    // Default fallback to console provider to ensure safe operations
-    this.provider = new ConsoleAnalyticsProvider();
+    // Starts with no providers; they are added via addProvider()
   }
 
   /**
@@ -188,40 +188,64 @@ export class AnalyticsManager {
   }
 
   /**
-   * Configures and initializes the active analytics provider.
-   * This allows changing providers dynamically at runtime (Open-Closed Principle).
+   * Adds and initializes a provider. Multiple providers can coexist (Composite Pattern).
+   * Each call appends a new provider without removing existing ones.
    */
-  public setProvider(provider: AnalyticsProvider): void {
-    this.provider = provider;
-    this.provider.initialize();
+  public addProvider(provider: AnalyticsProvider): void {
+    provider.initialize();
+    this.providers.push(provider);
   }
 
   /**
-   * Tracks page view using the configured provider.
+   * Replaces all providers with a single one.
+   * Kept for backwards compatibility and simple single-provider setups.
+   */
+  public setProvider(provider: AnalyticsProvider): void {
+    this.providers = [];
+    this.addProvider(provider);
+  }
+
+  /**
+   * Tracks page view using all configured providers.
    */
   public trackPageView(path: string, title?: string): void {
-    try {
-      this.provider.trackPageView(path, title);
-    } catch (error) {
-      console.error('[Analytics] Failed to track page view:', error);
+    for (const provider of this.providers) {
+      try {
+        provider.trackPageView(path, title);
+      } catch (error) {
+        console.error('[Analytics] Failed to track page view:', error);
+      }
     }
   }
 
   /**
-   * Tracks a custom event using the configured provider.
+   * Tracks a custom event using all configured providers.
    */
   public trackEvent(name: string, params?: Record<string, any>): void {
-    try {
-      this.provider.trackEvent(name, params);
-    } catch (error) {
-      console.error(`[Analytics] Failed to track event '${name}':`, error);
+    for (const provider of this.providers) {
+      try {
+        provider.trackEvent(name, params);
+      } catch (error) {
+        console.error(`[Analytics] Failed to track event '${name}':`, error);
+      }
     }
   }
 }
 
-// GTM/GA4 ID Placeholder - User will update this manually.
-// Can be a GA4 measurement ID (starts with 'G-') or a GTM ID (starts with 'GTM-').
-export const ANALYTICS_ID = 'GTM-TM42HT44';
+/**
+ * Analytics configuration.
+ * Supports multiple providers running simultaneously.
+ * Add entries to enable additional tracking platforms.
+ */
+export const ANALYTICS_CONFIG = {
+  gtmId: 'GTM-TM42HT44',
+  ga4Id: 'G-M8TBKHY9RB',
+} as const;
+
+/**
+ * @deprecated Use ANALYTICS_CONFIG instead. Kept for backwards compatibility.
+ */
+export const ANALYTICS_ID = ANALYTICS_CONFIG.gtmId;
 
 // Export the singleton instance of the manager for global usage
 export const analytics = AnalyticsManager.getInstance();

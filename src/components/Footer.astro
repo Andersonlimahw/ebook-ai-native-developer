@@ -69,25 +69,31 @@ import Pagination from "@astrojs/starlight/components/Pagination.astro";
 <script>
   import { 
     analytics, 
-    ANALYTICS_ID, 
+    ANALYTICS_CONFIG, 
     GTMAnalyticsProvider, 
     GA4AnalyticsProvider, 
     ConsoleAnalyticsProvider 
   } from "../lib/analytics";
 
-  // 1. Initialize the correct provider based on the ANALYTICS_ID
+  // 1. Initialize all configured providers
   function initAnalytics() {
-    if (ANALYTICS_ID && !ANALYTICS_ID.includes("PLACEHOLDER")) {
-      if (ANALYTICS_ID.startsWith("GTM-")) {
-        analytics.setProvider(new GTMAnalyticsProvider(ANALYTICS_ID));
-      } else if (ANALYTICS_ID.startsWith("G-")) {
-        analytics.setProvider(new GA4AnalyticsProvider(ANALYTICS_ID));
-      } else {
-        analytics.setProvider(new ConsoleAnalyticsProvider());
-      }
-    } else {
-      // Development mode fallback
-      analytics.setProvider(new ConsoleAnalyticsProvider());
+    let hasProvider = false;
+
+    // Register GTM provider
+    if (ANALYTICS_CONFIG.gtmId && !ANALYTICS_CONFIG.gtmId.includes("PLACEHOLDER")) {
+      analytics.addProvider(new GTMAnalyticsProvider(ANALYTICS_CONFIG.gtmId));
+      hasProvider = true;
+    }
+
+    // Register GA4 provider
+    if (ANALYTICS_CONFIG.ga4Id && !ANALYTICS_CONFIG.ga4Id.includes("PLACEHOLDER")) {
+      analytics.addProvider(new GA4AnalyticsProvider(ANALYTICS_CONFIG.ga4Id));
+      hasProvider = true;
+    }
+
+    // Fallback to console in development or when no IDs are configured
+    if (!hasProvider) {
+      analytics.addProvider(new ConsoleAnalyticsProvider());
     }
   }
 
