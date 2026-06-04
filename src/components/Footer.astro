@@ -65,3 +65,69 @@ import Pagination from "@astrojs/starlight/components/Pagination.astro";
     }
   }
 </style>
+
+<script>
+  import { 
+    analytics, 
+    ANALYTICS_ID, 
+    GTMAnalyticsProvider, 
+    GA4AnalyticsProvider, 
+    ConsoleAnalyticsProvider 
+  } from "../lib/analytics";
+
+  // 1. Initialize the correct provider based on the ANALYTICS_ID
+  function initAnalytics() {
+    if (ANALYTICS_ID && !ANALYTICS_ID.includes("PLACEHOLDER")) {
+      if (ANALYTICS_ID.startsWith("GTM-")) {
+        analytics.setProvider(new GTMAnalyticsProvider(ANALYTICS_ID));
+      } else if (ANALYTICS_ID.startsWith("G-")) {
+        analytics.setProvider(new GA4AnalyticsProvider(ANALYTICS_ID));
+      } else {
+        analytics.setProvider(new ConsoleAnalyticsProvider());
+      }
+    } else {
+      // Development mode fallback
+      analytics.setProvider(new ConsoleAnalyticsProvider());
+    }
+  }
+
+  // 2. Track page view of the current page
+  function trackCurrentPage() {
+    analytics.trackPageView(window.location.pathname, document.title);
+  }
+
+  // 3. Track sidebar/menu clicks
+  function setupMenuTracking() {
+    document.addEventListener("click", (event) => {
+      const target = event.target as HTMLElement;
+      const link = target.closest("a");
+      
+      if (!link) return;
+
+      // Check if the link clicked is inside the sidebar pane (menu item)
+      const isSidebarLink = !!link.closest(".sidebar-pane");
+
+      if (isSidebarLink) {
+        analytics.trackEvent("menu_click", {
+          menu_item_name: link.textContent?.trim() || "",
+          menu_item_url: link.getAttribute("href") || "",
+          page_path: window.location.pathname
+        });
+      }
+    });
+  }
+
+  // Execute initialization and tracking on client load
+  try {
+    initAnalytics();
+    trackCurrentPage();
+    setupMenuTracking();
+
+    // Listen for client-side navigation events (e.g. Astro View Transitions)
+    document.addEventListener("astro:after-swap", () => {
+      trackCurrentPage();
+    });
+  } catch (error) {
+    console.error("[Analytics] Error in tracking script:", error);
+  }
+</script>
