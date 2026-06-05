@@ -45,7 +45,7 @@ export default defineConfig({
       ],
       sidebar: [
         {
-          label: "Conteúdo",
+          label: "Parte I — O Stack Agêntico",
           items: [
             { label: "Índice", link: "/" },
             { slug: "01-llm", label: "Capítulo 01 — O LLM" },
@@ -58,6 +58,18 @@ export default defineConfig({
             { slug: "08-mcp", label: "Capítulo 08 — O MCP" },
             { slug: "09-cli", label: "Capítulo 09 — O CLI" },
             { slug: "10-sintese", label: "Capítulo 10 — Síntese" },
+          ],
+        },
+        {
+          label: "Parte II — AI Native em Produção",
+          items: [
+            { slug: "11-embeddings", label: "Capítulo 11 — Embeddings" },
+            { slug: "12-rag", label: "Capítulo 12 — RAG" },
+            { slug: "13-memory", label: "Capítulo 13 — Memory" },
+            { slug: "14-tool-calling", label: "Capítulo 14 — Tool Calling" },
+            { slug: "15-evals", label: "Capítulo 15 — Evals" },
+            { slug: "16-observability", label: "Capítulo 16 — Observability" },
+            { slug: "17-cost-engineering", label: "Capítulo 17 — Cost Engineering" },
           ],
         },
       ],
