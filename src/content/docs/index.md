@@ -65,6 +65,8 @@ Leia assim: o **LLM** é o cérebro. O **harness** é o corpo que dá a ele olho
 
 ## Capítulos
 
+### Parte I — O Stack Agêntico
+
 | # | Capítulo | O que você sai sabendo |
 |---|----------|------------------------|
 | 01 | [O LLM](/ebook-ai-native-developer/01-llm/) | O que o modelo faz e, principalmente, o que ele **não** faz sozinho. |
@@ -78,9 +80,23 @@ Leia assim: o **LLM** é o cérebro. O **harness** é o corpo que dá a ele olho
 | 09 | [O CLI](/ebook-ai-native-developer/09-cli/) | Terminal como cabine de comando, comandos customizados e Git Worktrees. |
 | 10 | [Síntese](/ebook-ai-native-developer/10-sintese/) | O stack agêntico completo em ação de ponta a ponta, com melhores práticas. |
 
+### Parte II — AI Native em Produção
+
+Estudo de caso real: a [IgnitionStack](https://www.ignitionstack.pro/pt), plataforma SaaS multi-tenant. Da explicação do stack à construção de produtos de IA que rodam, escalam e fecham a conta.
+
+| # | Capítulo | O que você sai sabendo |
+|---|----------|------------------------|
+| 11 | [Embeddings & Semantic Search](/ebook-ai-native-developer/11-embeddings/) | Como texto vira vetor e a busca passa a ser por significado, não por palavra. |
+| 12 | [RAG](/ebook-ai-native-developer/12-rag/) | Recuperar conhecimento externo para responder com fatos atuais e citáveis. |
+| 13 | [Memory](/ebook-ai-native-developer/13-memory/) | O que o agente lembra entre sessões — e o que deve esquecer (LGPD inclusa). |
+| 14 | [Structured Outputs & Tool Calling](/ebook-ai-native-developer/14-tool-calling/) | Transformar linguagem em ações validadas e determinísticas no sistema. |
+| 15 | [Evals](/ebook-ai-native-developer/15-evals/) | O CI dos agentes: medir qualidade e barrar regressões antes do deploy. |
+| 16 | [Observability](/ebook-ai-native-developer/16-observability/) | Enxergar o que o agente fez, por que decidiu, quanto custou e onde falhou. |
+| 17 | [Cost Engineering](/ebook-ai-native-developer/17-cost-engineering/) | Tornar o produto de IA lucrativo sem sacrificar qualidade. |
+
 ## Como ler
 
-Linear, do 01 ao 10, é a forma recomendada na primeira vez — cada capítulo assume o anterior. Mas o capítulo 03 (`agent`) é o centro de gravidade: se você só tem 20 minutos, leia o 01, o 02 e o 03 nessa ordem e já terá o modelo mental que sustenta o resto.
+Linear, do 01 ao 17, é a forma recomendada na primeira vez — cada capítulo assume o anterior. A **Parte I** (01-10) monta o stack agêntico; a **Parte II** (11-17) coloca esse stack em produção. Mas o capítulo 03 (`agent`) é o centro de gravidade: se você só tem 20 minutos, leia o 01, o 02 e o 03 nessa ordem e já terá o modelo mental que sustenta o resto.
 
 Cada capítulo segue a mesma disciplina pedagógica:
 
