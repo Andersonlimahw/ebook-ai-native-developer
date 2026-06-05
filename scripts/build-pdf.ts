@@ -39,6 +39,11 @@ const server = Bun.serve({
   async fetch(request) {
     const url = new URL(request.url);
     let pathname = decodeURIComponent(url.pathname);
+    // O HTML referencia assets com o base path (ex.: /ebook-ai-native-developer/_astro/x.js),
+    // mas os arquivos vivem na raiz de dist/. Remove o prefixo de base para resolvê-los.
+    if (basePath && (pathname === basePath || pathname.startsWith(`${basePath}/`))) {
+      pathname = pathname.slice(basePath.length) || "/";
+    }
     if (pathname === "/") pathname = "/index.html";
     if (pathname.endsWith("/")) pathname += "index.html";
 
@@ -74,6 +79,14 @@ try {
   const page = await browser.newPage();
   await page.setViewport({ width: 1240, height: 1754, deviceScaleFactor: 1 });
   await page.goto(`${origin}${pdfPathname}`, { waitUntil: "networkidle0" });
+
+  // Aguarda o script da página renderizar todos os diagramas Mermaid em SVG.
+  await page
+    .waitForFunction("window.__pdfMermaidDone === true", { timeout: 60000 })
+    .catch(() =>
+      console.warn("Aviso: timeout aguardando render do Mermaid; gerando PDF mesmo assim."),
+    );
+
   await page.emulateMediaType("print");
   await page.pdf({
     path: outputPath,

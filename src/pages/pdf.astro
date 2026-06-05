@@ -285,6 +285,49 @@ const generatedAt = new Intl.DateTimeFormat("pt-BR", {
       .pdf-download {
         display: none;
       }
+
+      /* Mermaid no PDF: esconde controles interativos e o código-fonte.
+         Cobre as duas variações de markup: a barra de ações (Copiar/Tela cheia)
+         e qualquer <details> de código (.mermaid-source ou <details> sem classe). */
+      .mermaid-diagram__toolbar,
+      .mermaid-diagram details {
+        display: none !important;
+      }
+
+      /* Diagrama renderizado vira uma figura limpa, centralizada */
+      figure.mermaid-diagram {
+        break-inside: avoid;
+        margin: 6mm 0;
+        padding: 4mm;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: white;
+        text-align: center;
+      }
+
+      pre.mermaid {
+        margin: 0;
+      }
+
+      /* Sobrepõe o estilo de bloco de código (fundo preto) quando há SVG dentro */
+      pre.mermaid[data-mermaid-rendered] {
+        background: white !important;
+        border: 0 !important;
+        padding: 0 !important;
+        white-space: normal !important;
+      }
+
+      /* A regra global `pre * { color: #e5e7eb }` apaga os rótulos do diagrama
+         (Mermaid usa foreignObject + color). Restaura texto escuro e legível. */
+      pre.mermaid[data-mermaid-rendered],
+      pre.mermaid[data-mermaid-rendered] * {
+        color: var(--ink) !important;
+      }
+
+      pre.mermaid[data-mermaid-rendered] svg {
+        max-width: 100% !important;
+        height: auto;
+      }
     </style>
   </head>
   <body>
@@ -316,5 +359,55 @@ const generatedAt = new Intl.DateTimeFormat("pt-BR", {
         </article>
       ))}
     </main>
+
+    <script>
+      // Renderiza os diagramas Mermaid em SVG no carregamento da página.
+      // O gerador de PDF (scripts/build-pdf.ts) aguarda window.__pdfMermaidDone
+      // antes de imprimir, garantindo que as imagens estejam prontas.
+      import mermaid from "mermaid";
+
+      declare global {
+        interface Window {
+          __pdfMermaidDone?: boolean;
+        }
+      }
+
+      async function renderMermaidForPdf() {
+        const targets = Array.from(
+          document.querySelectorAll<HTMLElement>(".mermaid-diagram .mermaid"),
+        );
+
+        if (targets.length === 0) {
+          window.__pdfMermaidDone = true;
+          return;
+        }
+
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: "neutral",
+          securityLevel: "loose",
+        });
+
+        let seq = 0;
+        for (const el of targets) {
+          const code = (el.textContent ?? "").trim();
+          if (!code) continue;
+
+          try {
+            seq += 1;
+            const { svg } = await mermaid.render(`pdf-mermaid-${seq}`, code);
+            el.innerHTML = svg;
+            el.setAttribute("data-mermaid-rendered", "true");
+          } catch (error) {
+            console.error("Mermaid PDF render error:", error);
+            el.setAttribute("data-mermaid-error", "true");
+          }
+        }
+
+        window.__pdfMermaidDone = true;
+      }
+
+      void renderMermaidForPdf();
+    </script>
   </body>
 </html>
