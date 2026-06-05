@@ -17,5 +17,8 @@
     "astro": "latest",
     "puppeteer": "^25.1.0",
     "typescript": "^5"
+  },
+  "dependencies": {
+    "mermaid": "^11.15.0"
   }
 }

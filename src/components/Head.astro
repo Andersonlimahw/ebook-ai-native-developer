@@ -1,0 +1,521 @@
+---
+import Default from "@astrojs/starlight/components/Head.astro";
+---
+
+<Default {...Astro.props}>
+  <slot />
+</Default>
+
+<script>
+  type MermaidRenderResult = {
+    svg: string;
+    bindFunctions?: (element: Element) => void;
+  };
+
+  type MermaidApi = {
+    initialize: (config: Record<string, unknown>) => void;
+    render: (id: string, code: string) => MermaidRenderResult | Promise<MermaidRenderResult>;
+  };
+
+  type FullscreenView = {
+    zoom: number;
+    pan: { x: number; y: number };
+  };
+
+  type DragState = {
+    pointerId: number;
+    startX: number;
+    startY: number;
+    startPanX: number;
+    startPanY: number;
+  };
+
+  type MermaidModal = {
+    root: HTMLDivElement;
+    viewport: HTMLDivElement;
+    stage: HTMLDivElement;
+    content: HTMLDivElement;
+    closeButton: HTMLButtonElement;
+    copyButton: HTMLButtonElement;
+    zoomInButton: HTMLButtonElement;
+    zoomOutButton: HTMLButtonElement;
+  };
+
+  type MermaidState = {
+    mermaidPromise?: Promise<MermaidApi>;
+    mermaidInitialized: boolean;
+    modal?: MermaidModal;
+    activeDiagram?: HTMLElement;
+    activeOpener?: HTMLElement;
+    drag?: DragState;
+    previousBodyOverflow?: string;
+    seq: number;
+    view: FullscreenView;
+  };
+
+  type MermaidWindow = Window &
+    typeof globalThis & {
+      __ebookMermaidBound?: boolean;
+      __ebookMermaidState?: MermaidState;
+    };
+
+  const win = window as MermaidWindow;
+  const state =
+    win.__ebookMermaidState ??
+    (win.__ebookMermaidState = {
+      mermaidInitialized: false,
+      seq: 0,
+      view: { zoom: 1, pan: { x: 0, y: 0 } },
+    });
+
+  const ZOOM_MIN = 1;
+  const ZOOM_MAX = 3.5;
+  const ZOOM_STEP = 0.25;
+  const WHEEL_ZOOM_STEP = 0.15;
+
+  function createButton(text: string, ariaLabel: string, className = "mermaid-fullscreen__button") {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = className;
+    button.textContent = text;
+    button.setAttribute("aria-label", ariaLabel);
+    return button;
+  }
+
+  function clamp(value: number, min: number, max: number) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function getSourceCode(diagram: Element) {
+    return diagram.querySelector<HTMLElement>(".mermaid-source code")?.textContent?.trim() ?? "";
+  }
+
+  async function getMermaid() {
+    if (!state.mermaidPromise) {
+      state.mermaidPromise = import("mermaid").then((mermaidMod) => {
+        const mermaid = ((mermaidMod as { default?: MermaidApi }).default ?? mermaidMod) as MermaidApi;
+
+        if (!state.mermaidInitialized) {
+          mermaid.initialize({
+            startOnLoad: false,
+            theme: "neutral",
+            securityLevel: "loose",
+          });
+          state.mermaidInitialized = true;
+        }
+
+        return mermaid;
+      });
+    }
+
+    return state.mermaidPromise;
+  }
+
+  function showRenderError(target: HTMLElement, message = "Erro ao renderizar diagrama. Veja o código abaixo.") {
+    target.textContent = message;
+    target.classList.add("mermaid-error");
+    target.dataset.mermaidError = "true";
+  }
+
+  async function renderDiagram(diagram: HTMLElement, mermaid: MermaidApi) {
+    const target = diagram.querySelector<HTMLElement>(".mermaid");
+    if (!target || target.dataset.mermaidRendered || target.dataset.mermaidRendering) return;
+
+    const code = target.textContent?.trim() ?? "";
+    target.dataset.mermaidRendering = "true";
+    diagram.dataset.mermaidInitialized = "true";
+
+    try {
+      if (!code) {
+        showRenderError(target, "Código Mermaid vazio.");
+        diagram.dataset.mermaidError = "true";
+        return;
+      }
+
+      state.seq += 1;
+      const id = `mermaid-${state.seq}`;
+      const { svg, bindFunctions } = await mermaid.render(id, code);
+
+      target.innerHTML = svg;
+      bindFunctions?.(target);
+      target.classList.remove("mermaid-error");
+      target.dataset.mermaidRendered = "true";
+      target.setAttribute("aria-label", "Diagrama Mermaid renderizado");
+      diagram.dataset.mermaidRendered = "true";
+    } catch (error) {
+      console.error("Mermaid render error:", error);
+      showRenderError(target);
+      diagram.dataset.mermaidError = "true";
+    } finally {
+      delete target.dataset.mermaidRendering;
+    }
+  }
+
+  async function initMermaid() {
+    const diagrams = Array.from(
+      document.querySelectorAll<HTMLElement>(".mermaid-diagram:not([data-mermaid-initialized])"),
+    );
+
+    if (diagrams.length === 0) return;
+
+    try {
+      const mermaid = await getMermaid();
+      for (const diagram of diagrams) {
+        await renderDiagram(diagram, mermaid);
+      }
+    } catch (error) {
+      console.error("Mermaid load error:", error);
+      for (const diagram of diagrams) {
+        const target = diagram.querySelector<HTMLElement>(".mermaid");
+        if (target) showRenderError(target, "Erro ao carregar Mermaid.");
+        diagram.dataset.mermaidInitialized = "true";
+        diagram.dataset.mermaidError = "true";
+      }
+    }
+  }
+
+  async function writeClipboard(text: string) {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.className = "mermaid-clipboard-fallback";
+    document.body.append(textarea);
+    textarea.select();
+
+    try {
+      const copied = document.execCommand("copy");
+      if (!copied) throw new Error("Clipboard fallback failed");
+    } finally {
+      textarea.remove();
+    }
+  }
+
+  function showButtonState(button: HTMLButtonElement, text: string, stateName: "copied" | "error") {
+    const originalText = button.dataset.originalText ?? button.textContent ?? "Copiar";
+    const existingTimer = Number(button.dataset.resetTimer);
+
+    if (existingTimer) window.clearTimeout(existingTimer);
+
+    button.dataset.originalText = originalText;
+    button.dataset.state = stateName;
+    button.textContent = text;
+    button.dataset.resetTimer = String(
+      window.setTimeout(() => {
+        button.textContent = button.dataset.originalText ?? "Copiar";
+        delete button.dataset.state;
+        delete button.dataset.resetTimer;
+      }, 1500),
+    );
+  }
+
+  async function copyMermaidSource(diagram: Element, button: HTMLButtonElement) {
+    const code = getSourceCode(diagram);
+    if (!code) {
+      showButtonState(button, "Falha", "error");
+      return;
+    }
+
+    try {
+      await writeClipboard(code);
+      showButtonState(button, "Copiado", "copied");
+    } catch (error) {
+      console.error("Mermaid copy error:", error);
+      showButtonState(button, "Falha", "error");
+    }
+  }
+
+  function buildModal() {
+    const root = document.createElement("div");
+    root.className = "mermaid-fullscreen";
+    root.hidden = true;
+    root.tabIndex = -1;
+    root.setAttribute("role", "dialog");
+    root.setAttribute("aria-modal", "true");
+    root.setAttribute("aria-labelledby", "mermaid-fullscreen-title");
+
+    const panel = document.createElement("div");
+    panel.className = "mermaid-fullscreen__panel";
+
+    const header = document.createElement("div");
+    header.className = "mermaid-fullscreen__header";
+
+    const title = document.createElement("h2");
+    title.id = "mermaid-fullscreen-title";
+    title.className = "mermaid-fullscreen__title";
+    title.textContent = "Diagrama Mermaid";
+
+    const actions = document.createElement("div");
+    actions.className = "mermaid-fullscreen__actions";
+
+    const zoomOutButton = createButton("Diminuir zoom", "Diminuir zoom");
+    const zoomInButton = createButton("Aumentar zoom", "Aumentar zoom");
+    const copyButton = createButton("Copiar", "Copiar código Mermaid");
+    const closeButton = createButton("Fechar", "Fechar tela cheia");
+
+    actions.append(zoomOutButton, zoomInButton, copyButton, closeButton);
+    header.append(title, actions);
+
+    const viewport = document.createElement("div");
+    viewport.className = "mermaid-fullscreen-viewport";
+
+    const stage = document.createElement("div");
+    stage.className = "mermaid-fullscreen-stage";
+
+    const content = document.createElement("div");
+    content.className = "mermaid-fullscreen-content";
+    content.style.transformOrigin = "center";
+
+    stage.append(content);
+    viewport.append(stage);
+    panel.append(header, viewport);
+    root.append(panel);
+    document.body.append(root);
+
+    const modal: MermaidModal = {
+      root,
+      viewport,
+      stage,
+      content,
+      closeButton,
+      copyButton,
+      zoomInButton,
+      zoomOutButton,
+    };
+
+    closeButton.addEventListener("click", closeFullscreen);
+    copyButton.addEventListener("click", () => {
+      if (state.activeDiagram) void copyMermaidSource(state.activeDiagram, copyButton);
+    });
+    zoomInButton.addEventListener("click", () => zoomFromCenter(ZOOM_STEP));
+    zoomOutButton.addEventListener("click", () => zoomFromCenter(-ZOOM_STEP));
+    viewport.addEventListener("wheel", handleFullscreenWheel, { passive: false });
+    viewport.addEventListener("pointerdown", handlePointerDown);
+    viewport.addEventListener("pointermove", handlePointerMove);
+    viewport.addEventListener("pointerup", handlePointerEnd);
+    viewport.addEventListener("pointercancel", handlePointerEnd);
+
+    state.modal = modal;
+    return modal;
+  }
+
+  function getModal() {
+    return state.modal ?? buildModal();
+  }
+
+  function lockBodyScroll() {
+    state.previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.body.classList.add("mermaid-fullscreen-open");
+  }
+
+  function restoreBodyScroll() {
+    document.body.style.overflow = state.previousBodyOverflow ?? "";
+    document.body.classList.remove("mermaid-fullscreen-open");
+    delete state.previousBodyOverflow;
+  }
+
+  function updateFullscreenTransform() {
+    const modal = state.modal;
+    if (!modal) return;
+
+    modal.stage.style.transform = `translate(${state.view.pan.x}px, ${state.view.pan.y}px)`;
+    modal.content.style.transform = `translate(-50%, -50%) scale(${state.view.zoom})`;
+    modal.zoomOutButton.disabled = state.view.zoom <= ZOOM_MIN;
+    modal.zoomInButton.disabled = state.view.zoom >= ZOOM_MAX;
+  }
+
+  function setZoom(nextZoom: number, anchor: { x: number; y: number }) {
+    const modal = state.modal;
+    if (!modal) return;
+
+    const oldZoom = state.view.zoom;
+    const zoom = clamp(nextZoom, ZOOM_MIN, ZOOM_MAX);
+
+    if (zoom <= ZOOM_MIN) {
+      state.view = { zoom: ZOOM_MIN, pan: { x: 0, y: 0 } };
+      updateFullscreenTransform();
+      return;
+    }
+
+    const rect = modal.viewport.getBoundingClientRect();
+    const center = { x: rect.width / 2, y: rect.height / 2 };
+    const localX = (anchor.x - center.x - state.view.pan.x) / oldZoom;
+    const localY = (anchor.y - center.y - state.view.pan.y) / oldZoom;
+
+    state.view = {
+      zoom,
+      pan: {
+        x: anchor.x - center.x - localX * zoom,
+        y: anchor.y - center.y - localY * zoom,
+      },
+    };
+
+    updateFullscreenTransform();
+  }
+
+  function zoomFromCenter(delta: number) {
+    const modal = state.modal;
+    if (!modal) return;
+
+    const rect = modal.viewport.getBoundingClientRect();
+    setZoom(state.view.zoom + delta, { x: rect.width / 2, y: rect.height / 2 });
+  }
+
+  function handleFullscreenWheel(event: WheelEvent) {
+    if (!state.modal || state.modal.root.hidden) return;
+
+    event.preventDefault();
+
+    const rect = state.modal.viewport.getBoundingClientRect();
+    const delta = event.deltaY < 0 ? WHEEL_ZOOM_STEP : -WHEEL_ZOOM_STEP;
+    setZoom(state.view.zoom + delta, {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    });
+  }
+
+  function handlePointerDown(event: PointerEvent) {
+    const modal = state.modal;
+    if (!modal || modal.root.hidden) return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+
+    state.drag = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      startPanX: state.view.pan.x,
+      startPanY: state.view.pan.y,
+    };
+
+    modal.viewport.classList.add("is-dragging");
+    modal.viewport.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  }
+
+  function handlePointerMove(event: PointerEvent) {
+    const drag = state.drag;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+
+    state.view.pan = {
+      x: drag.startPanX + event.clientX - drag.startX,
+      y: drag.startPanY + event.clientY - drag.startY,
+    };
+    updateFullscreenTransform();
+  }
+
+  function handlePointerEnd(event: PointerEvent) {
+    const modal = state.modal;
+    if (!modal || !state.drag || state.drag.pointerId !== event.pointerId) return;
+
+    try {
+      modal.viewport.releasePointerCapture(event.pointerId);
+    } catch {
+      // Pointer may already be released by the browser.
+    }
+
+    modal.viewport.classList.remove("is-dragging");
+    delete state.drag;
+  }
+
+  async function openFullscreen(diagram: HTMLElement, opener: HTMLElement) {
+    await initMermaid();
+
+    const modal = getModal();
+    const svg = diagram.querySelector<SVGElement>(".mermaid svg");
+
+    modal.content.replaceChildren();
+    state.activeDiagram = diagram;
+    state.activeOpener = opener;
+    state.view = { zoom: ZOOM_MIN, pan: { x: 0, y: 0 } };
+
+    if (svg) {
+      modal.content.append(svg.cloneNode(true));
+    } else {
+      const fallback = document.createElement("p");
+      fallback.className = "mermaid-fullscreen__error";
+      fallback.textContent = "Diagrama ainda não renderizado.";
+      modal.content.append(fallback);
+    }
+
+    modal.root.hidden = false;
+    lockBodyScroll();
+    updateFullscreenTransform();
+    modal.closeButton.focus();
+  }
+
+  function closeFullscreen() {
+    const modal = state.modal;
+    if (!modal || modal.root.hidden) return;
+
+    modal.root.hidden = true;
+    modal.content.replaceChildren();
+    modal.viewport.classList.remove("is-dragging");
+    restoreBodyScroll();
+    delete state.drag;
+
+    const opener = state.activeOpener;
+    delete state.activeDiagram;
+    delete state.activeOpener;
+    opener?.focus();
+  }
+
+  function trapFocus(event: KeyboardEvent) {
+    const modal = state.modal;
+    if (!modal || modal.root.hidden) return;
+
+    const focusable = Array.from(modal.root.querySelectorAll<HTMLElement>("button:not([disabled]), [tabindex]:not([tabindex='-1'])"));
+    if (focusable.length === 0) return;
+
+    const first = focusable.at(0);
+    const last = focusable.at(-1);
+    if (!first || !last) return;
+
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.key === "Escape") {
+      closeFullscreen();
+    } else if (event.key === "Tab") {
+      trapFocus(event);
+    }
+  }
+
+  function handleDocumentClick(event: MouseEvent) {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+
+    const copyButton = target.closest<HTMLButtonElement>("[data-mermaid-copy]");
+    if (copyButton) {
+      const diagram = copyButton.closest<HTMLElement>(".mermaid-diagram");
+      if (diagram) void copyMermaidSource(diagram, copyButton);
+      return;
+    }
+
+    const fullscreenButton = target.closest<HTMLElement>("[data-mermaid-fullscreen]");
+    if (fullscreenButton) {
+      const diagram = fullscreenButton.closest<HTMLElement>(".mermaid-diagram");
+      if (diagram) void openFullscreen(diagram, fullscreenButton);
+    }
+  }
+
+  if (!win.__ebookMermaidBound) {
+    win.__ebookMermaidBound = true;
+    document.addEventListener("click", handleDocumentClick);
+    document.addEventListener("keydown", handleKeydown);
+    document.addEventListener("astro:page-load", initMermaid);
+  }
+
+  void initMermaid();
+</script>

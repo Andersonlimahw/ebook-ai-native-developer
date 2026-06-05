@@ -1,5 +1,6 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
+import { remarkMermaid } from "./src/plugins/remark-mermaid.ts";
 
 const base = "/ebook-ai-native-developer";
 const withBase = (path) => `${base}${path}`;
@@ -7,6 +8,9 @@ const withBase = (path) => `${base}${path}`;
 export default defineConfig({
   site: "https://andersonlimahw.github.io",
   base,
+  markdown: {
+    remarkPlugins: [remarkMermaid],
+  },
   integrations: [
     starlight({
       title: "AI Native Developer",
@@ -23,6 +27,7 @@ export default defineConfig({
         },
       },
       components: {
+        Head: "./src/components/Head.astro",
         Footer: "./src/components/Footer.astro",
       },
       customCss: ["./src/styles/starlight.css"],
