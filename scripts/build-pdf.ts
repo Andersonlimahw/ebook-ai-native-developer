@@ -86,6 +86,12 @@ try {
 
   const size = (await Bun.file(outputPath).arrayBuffer()).byteLength;
   console.log(`PDF gerado: ${outputPath} (${Math.round(size / 1024)} KB)`);
+
+  // Espelha em public/ para o servidor de dev: `astro dev` serve public/ (com base),
+  // mas não serve dist/. Sem isto, /ai-native-developer.pdf dá 404 em desenvolvimento.
+  const publicPath = path.join(rootDir, "public", "ai-native-developer.pdf");
+  await Bun.write(publicPath, Bun.file(outputPath));
+  console.log(`PDF espelhado para dev: ${publicPath}`);
 } finally {
   await browser?.close();
   server.stop(true);
