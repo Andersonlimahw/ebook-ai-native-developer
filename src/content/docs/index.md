@@ -94,9 +94,17 @@ Estudo de caso real: a [IgnitionStack](https://www.ignitionstack.pro/pt), plataf
 | 16 | [Observability](/ebook-ai-native-developer/16-observability/) | Enxergar o que o agente fez, por que decidiu, quanto custou e onde falhou. |
 | 17 | [Cost Engineering](/ebook-ai-native-developer/17-cost-engineering/) | Tornar o produto de IA lucrativo sem sacrificar qualidade. |
 
+### Parte III — Engenharia de Loop
+
+O ciclo autônomo de experimentação e melhoria: métrica, escopo, verificação e rollback. Deixamos de focar só no prompt e passamos a projetar processos iterativos robustos.
+
+| # | Capítulo | O que você sai sabendo |
+|---|----------|------------------------|
+| 18 | [Engenharia de Loop](/ebook-ai-native-developer/18-loop-engineer/) | Ciclos com métrica, escopo e rollback: Autoresearch, bundle, spec-loop, Chrome QA e maturidade do loop. |
+
 ## Como ler
 
-Linear, do 01 ao 17, é a forma recomendada na primeira vez — cada capítulo assume o anterior. A **Parte I** (01-10) monta o stack agêntico; a **Parte II** (11-17) coloca esse stack em produção. Mas o capítulo 03 (`agent`) é o centro de gravidade: se você só tem 20 minutos, leia o 01, o 02 e o 03 nessa ordem e já terá o modelo mental que sustenta o resto.
+Linear, do 01 ao 18, é a forma recomendada na primeira vez. A **Parte I** (01-10) monta o stack agêntico, a **Parte II** (11-17) coloca esse stack em produção, e a **Parte III** explora as fronteiras da Engenharia de Loop. Mas o capítulo 03 (`agent`) é o centro de gravidade: se você só tem 20 minutos, leia o 01, o 02 e o 03 nessa ordem e já terá o modelo mental que sustenta o resto.
 
 Cada capítulo segue a mesma disciplina pedagógica:
 
