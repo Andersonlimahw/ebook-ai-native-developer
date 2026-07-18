@@ -72,6 +72,12 @@ export default defineConfig({
             { slug: "17-cost-engineering", label: "Capítulo 17 — Cost Engineering" },
           ],
         },
+        {
+          label: "Parte III — Engenharia de Loop",
+          items: [
+            { slug: "18-loop-engineer", label: "Capítulo 18 — Engenharia de Loop" },
+          ],
+        },
       ],
     }),
   ],
