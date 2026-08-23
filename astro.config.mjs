@@ -76,6 +76,8 @@ export default defineConfig({
           label: "Parte III — Engenharia de Loop",
           items: [
             { slug: "18-loop-engineer", label: "Capítulo 18 — Engenharia de Loop" },
+            { slug: "19-workflows", label: "Capítulo 19 — Workflows com Subagents" },
+            { slug: "20-graph-engineering", label: "Capítulo 20 — Graph Engineering" },
           ],
         },
       ],

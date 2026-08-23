@@ -1,5 +1,7 @@
 # AI Native Developer
 
+> 📖 **Leia online:** [andersonlimahw.github.io/ebook-ai-native-developer](https://andersonlimahw.github.io/ebook-ai-native-developer)
+
 Guia de desenvolvimento agêntico com Claude Code, Codex e stacks AI-native.
 
 ## Desenvolvimento
