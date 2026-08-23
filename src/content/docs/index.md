@@ -101,6 +101,8 @@ O ciclo autônomo de experimentação e melhoria: métrica, escopo, verificaçã
 | # | Capítulo | O que você sai sabendo |
 |---|----------|------------------------|
 | 18 | [Engenharia de Loop](/ebook-ai-native-developer/18-loop-engineer/) | Ciclos com métrica, escopo e rollback: Autoresearch, bundle, spec-loop, Chrome QA e maturidade do loop. |
+| 19 | [Workflows com Subagents](/ebook-ai-native-developer/19-workflows/) | Workflows dinâmicos que orquestram centenas de subagents via scripts JavaScript. |
+| 20 | [Graph Engineering](/ebook-ai-native-developer/20-graph-engineering/) | De loops isolados a grafos de agentes com estado compartilhado e memória durável. |
 
 ## Como ler
 
