@@ -1,8 +1,8 @@
 ---
-title: "Capítulo 20 — Graph Engineering"
+title: "Capítulo 19 — Graph Engineering"
 description: "De loops isolados a grafos de agentes: como conectar nós especializados com estado compartilhado, memória durável e orquestração explícita."
 sidebar:
-  order: 20
+  order: 19
 ---
 
 > "Are we still talking loops or did we shift to graphs yet?"
@@ -12,7 +12,7 @@ sidebar:
 
 ## O Contexto
 
-Nos capítulos anteriores, vimos como o [Loop Engineering (Capítulo 18)](/ebook-ai-native-developer/18-loop-engineering) permite que um agente critique e refine seu próprio trabalho de forma isolada. Em seguida, os [Workflows (Capítulo 19)](/ebook-ai-native-developer/19-workflows) nos mostraram como orquestrar essas tarefas de forma programática. Mas o que acontece quando você precisa de múltiplos loops especializados conversando entre si? O Graph Engineering é a resposta. Ele pega os conceitos de Loop e Workflow e introduz uma arquitetura onde cada agente é um nó com memória durável, compondo uma máquina de estados complexa, muito além de um simples loop `while`.
+Nos capítulos anteriores, vimos como o [Loop Engineering (Capítulo 18)](/ebook-ai-native-developer/18-loop-engineering) permite que um agente critique e refine seu próprio trabalho de forma isolada. Em seguida, os [Workflows (Capítulo 20)](/ebook-ai-native-developer/20-workflows) nos mostraram como orquestrar essas tarefas de forma programática. Mas o que acontece quando você precisa de múltiplos loops especializados conversando entre si? O Graph Engineering é a resposta. Ele pega os conceitos de Loop e Workflow e introduz uma arquitetura onde cada agente é um nó com memória durável, compondo uma máquina de estados complexa, muito além de um simples loop `while`.
 
 ## Primeiro, o grafo em ação
 
@@ -142,13 +142,13 @@ Ainda hoje, a maior parte do trabalho cognitivo é bem resolvida por um único a
 
 ## Fontes
 
+* Anthropic — *Building effective agents*: [Anthropic Research](https://www.anthropic.com/research/building-effective-agents)
 * Andrej Karpathy — AutoResearch: [GitHub](https://github.com/karpathy/autoresearch)
 * Andrej Karpathy — agents.md: [GitHub](https://github.com/karpathy/agents.md)
 * AI Builder Club — *Graph Engineering Guide (2026)*: [Link](https://www.aibuilderclub.com/blog/graph-engineering-guide-2026)
 * Medium — *Graph Engineering: The Missing Memory Layer for Multi-Agent AI*: [Link](https://medium.com/@sdntechdemo/graph-engineering-the-missing-memory-layer-for-multi-agent-ai-b65975b38f44)
 * LangGraph — Overview: [LangChain Docs](https://docs.langchain.com/oss/python/langgraph/overview)
 * Google ADK: [adk.dev](https://adk.dev/)
-* Anthropic — *Building effective agents*: [Anthropic Research](https://www.anthropic.com/research/building-effective-agents)
 * Claude Code — Dynamic Workflows: [Claude Code Docs](https://code.claude.com/docs/en/workflows)
 * Andrew Ng — *Agentic Design Patterns*
 * Harrison Chase (@hwchase17) — X thread on graph engineering.

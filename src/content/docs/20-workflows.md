@@ -1,8 +1,8 @@
 ---
-title: "Capítulo 19 — Workflows com Subagents"
+title: "Capítulo 20 — Workflows com Subagents"
 description: "Workflows dinâmicos que orquestram dezenas a centenas de subagents via scripts JavaScript — do audit de codebase à migração em larga escala."
 sidebar:
-  order: 19
+  order: 20
 ---
 
 > "Enquanto subagents resolvem problemas isolados sob demanda, workflows transformam orquestração em código, permitindo que a AI controle paralelismo massivo, loops de verificação e consolidação de resultados de forma autônoma."
@@ -153,4 +153,4 @@ Operar frotas de agentes custa tokens e energia computacional. O ecossistema imp
 
 Workflows Dinâmicos representam o ápice da delegação determinística. Ao transferir a lógica de orquestração — loops, mapeamentos, tratamentos de falha — da capacidade imperfeita de raciocínio verbal de um LLM para o determinismo rígido do código de script, liberamos a IA para focar no que ela faz de melhor: resolver o problema contido dentro de cada nó individual. É a infraestrutura como código (IaC) aplicada à força de trabalho de inteligência artificial.
 
-Próximo: [Capítulo 20 — Graph Engineering](/ebook-ai-native-developer/20-graph-engineering/).
+Próximo: [Capítulo 19 — Graph Engineering](/ebook-ai-native-developer/19-graph-engineering/).
