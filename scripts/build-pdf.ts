@@ -78,7 +78,7 @@ try {
 
   const page = await browser.newPage();
   await page.setViewport({ width: 1240, height: 1754, deviceScaleFactor: 1 });
-  await page.goto(`${origin}${pdfPathname}`, { waitUntil: "networkidle0" });
+  await page.goto(`${origin}${pdfPathname}`, { waitUntil: "networkidle0", timeout: 120000 });
 
   // Aguarda o script da página renderizar todos os diagramas Mermaid em SVG.
   await page
